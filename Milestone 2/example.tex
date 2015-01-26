@@ -1,0 +1,414 @@
+\documentclass[letterpaper,10pt]{article}
+
+\usepackage{graphicx}                                        
+\usepackage{amssymb}                                         
+\usepackage{amsmath}                                         
+\usepackage{amsthm}                                          
+
+\usepackage{alltt}                                           
+\usepackage{float}
+\usepackage{color}
+\usepackage{url}
+
+\usepackage{balance}
+\usepackage[TABBOTCAP, tight]{subfigure}
+\usepackage{enumitem}
+\usepackage{pstricks, pst-node}
+
+\usepackage{geometry}
+\geometry{textheight=8.5in, textwidth=6in}
+
+\usepackage{etex}
+\usepackage{tikz}
+\usepackage{tikz-qtree}
+
+%----------------------------------------------------------------------------------------
+%         Setting for importing code files
+%     http://en.wikibooks.org/wiki/LaTeX/Source_Code_Listings
+%----------------------------------------------------------------------------------------
+
+\usepackage{import}
+\usepackage{listings}
+\usepackage{color}
+
+\definecolor{mygreen}{rgb}{0,0.6,0}
+\definecolor{mygray}{rgb}{0.5,0.5,0.5}
+\definecolor{mymauve}{rgb}{0.58,0,0.82}
+
+\lstset{ %
+  backgroundcolor=\color{white},   % choose the background color; you must add \usepackage{color} or \usepackage{xcolor}
+  basicstyle=\small,        % the size of the fonts that are used for the code
+  breakatwhitespace=false,         % sets if automatic breaks should only happen at whitespace
+  breaklines=true,                 % sets automatic line breaking
+  captionpos=b,                    % sets the caption-position to bottom
+  commentstyle=\color{mygreen},    % comment style
+  deletekeywords={...},            % if you want to delete keywords from the given language
+  escapeinside={\%*}{*)},          % if you want to add LaTeX within your code
+  extendedchars=true,              % lets you use non-ASCII characters; for 8-bits encodings only, does not work with UTF-8
+%  frame=single,                    % adds a frame around the code
+  keepspaces=true,                 % keeps spaces in text, useful for keeping indentation of code (possibly needs columns=flexible)
+  keywordstyle=\color{blue},       % keyword style
+  language=Octave,                 % the language of the code
+  morekeywords={*,...},            % if you want to add more keywords to the set
+  numbers=left,                    % where to put the line-numbers; possible values are (none, left, right)
+  numbersep=8pt,                   % how far the line-numbers are from the code
+  numberstyle=\tiny\color{mygray}, % the style that is used for the line-numbers
+  rulecolor=\color{black},         % if not set, the frame-color may be changed on line-breaks within not-black text (e.g. comments (green here))
+  showspaces=false,                % show spaces everywhere adding particular underscores; it overrides 'showstringspaces'
+  showstringspaces=false,          % underline spaces within strings only
+  showtabs=false,                  % show tabs within strings adding particular underscores
+  stepnumber=2,                    % the step between two line-numbers. If it's 1, each line will be numbered
+  stringstyle=\color{mymauve},     % string literal style
+  tabsize=2,                       % sets default tabsize to 2 spaces
+  title=\lstname                   % show the filename of files included with \lstinputlisting; also try caption instead of title
+}
+
+%----------------------------------------------------------------------------------------
+
+\newcommand{\toc}{\tableofcontents}
+
+\usepackage{hyperref}
+
+\def\name{Drake Bridgewater }
+\def\title{Milestone 1: Introduction to \textit{gforth}}
+\def\subject{CS }
+\def\courseNumber{352 }
+\def\courseName{TRANSLATORS }
+\def\courseInfo{Winter 2015 }%Class Time: MWF X-X:XX AM}
+\def\supervisor{Dr. Jennifer \textsc{Parham-Mocello }} % Supervisor's Name
+
+%% The following metadata will show up in the PDF properties
+ \hypersetup{
+   colorlinks = false,
+   urlcolor = black,
+   pdfauthor = {\name},
+   pdfkeywords = {\title, \subject, \courseNumber, \courseName, \supervisor},
+   pdftitle = {\title},
+   pdfsubject = {\subject},
+   pdfpagemode = UseNone
+ }
+
+\parindent = 0.0 in
+\parskip = 0.1 in
+
+\begin{document}
+
+
+\begin{titlepage}
+
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}} % Defines a new command for the horizontal lines, change thickness here
+
+\center % Center everything on the page
+ 
+%----------------------------------------------------------------------------------------
+%        HEADING SECTIONS
+%----------------------------------------------------------------------------------------
+
+\textsc{\LARGE Oregon State University}\\[1.5cm] % Name of your university/college
+\textsc{\Large \subject \courseNumber - \courseName}\\[0.5cm] % Major heading such as course name
+\textsc{\large \courseInfo}\\[1.5cm] % Minor heading such as course title
+
+%----------------------------------------------------------------------------------------
+%        TITLE SECTION
+%----------------------------------------------------------------------------------------
+
+\HRule \\[0.4cm]
+{ \huge \bfseries \title }\\[0.4cm] % Title of your document
+\HRule \\[7.5cm]
+ 
+%----------------------------------------------------------------------------------------
+%        AUTHOR SECTION
+%----------------------------------------------------------------------------------------
+
+\begin{minipage}{0.4\textwidth}
+\begin{flushleft} \large
+\emph{Author:}\\
+\name
+\end{flushleft}
+\end{minipage}
+~
+\begin{minipage}{0.4\textwidth}
+\begin{flushright} \large
+\emph{Professor:} \\
+\supervisor
+\end{flushright}
+\end{minipage}\\[4cm]
+
+% If you don't want a supervisor, uncomment the two lines below and remove the section above
+%\Large \emph{Author:}\\
+%John \textsc{Smith}\\[3cm] % Your name
+
+%----------------------------------------------------------------------------------------
+%        DATE SECTION
+%----------------------------------------------------------------------------------------
+
+DUE 01/16/15 (11:59pm)\\
+{\large \today}\\[3cm] % Date, change the \today to a set date if you want to be precise
+
+%----------------------------------------------------------------------------------------
+%        LOGO SECTION
+%----------------------------------------------------------------------------------------
+
+%\includegraphics{Logo}\\[1cm] % Include a department/university logo - this will require the graphicx package
+ 
+%----------------------------------------------------------------------------------------
+
+\vfill % Fill the rest of the page with whitespace
+
+\end{titlepage}
+
+\tableofcontents
+\vfill % Fill the rest of the page with whitespace
+\newpage
+
+
+\section{Assignment} \hrule
+\subsection{Introduction} 
+The output of our compiler will be the input to the "machine." In C, the compiler generates an object file, the familiar .o file, that is then linked into the a.out file. To actually run the program you must still cause the operating system to load a.out file into memory for the machine to execute.
+
+For our project, we will instead use the program gforth. gforth is almost completely opposite of Lisp. The syntactic format for gforth is postorder. While Lisp has some syntax, gforth only has spelling rules. As an example,
+
+our 1+2 expression in C would be entered as
+
+1 2 +
+
+in gforth.
+
+\subsection{Objective}
+\begin{itemize}
+\item Objective 1 is to introduce you to gforth. Gforth will be the machine that we code to.
+\begin{itemize}
+\item reversing list: 1 2 3 rot rot swap .s 
+\end{itemize}
+\item Objective 2 is to emphasize the crucial role of generalized trees and generalized postorder traversal.
+\item  Objective 3 is to get you to formulate a generalized expression tree data structure.
+\end{itemize}
+
+
+
+
+
+
+Professional Methods and Values
+
+The professional will learn to use many programming languages and paradigms throughout her/his professional career. The hallmark of the professional in this venue is the ability to quickly master a new programming language or paradigm and to relate the new to the old.
+
+Assignment
+
+The below exercises are simple "Hello World" type exercises. These short program segments or small programs are designed to get you to understand how to learn a new language: you pretty much just sit down and try some standard things that you already know must work.
+\newpage
+\subsection{Performance Objectives}
+
+In this milestone, you have several clear performance objectives.
+\begin{enumerate}
+
+\item Learn to run gforth on either a Departmental machine or how to install and use gforth on your own machine.
+\item Learn the simple programming style of gforth. Documentation/Download information is given on the links page.
+\item \textbf{Translate a the infix style expressions in the Initial Forth Exercises 1 - 11 to an expression tree. The output here is a drawn tree. You do not need to include the printf statements as part of your tree. The printf is just to make sure you know to print the answer, not just calculate it.}
+\item\textbf{ Do a postorder traversal of the expression tree to generate the gforth input. The output of this step is gforth code.}
+\item Produce running gforth code that evaluates the programs equivalent to initial exercises. The output here is the running of the gforth code.
+\end{enumerate}
+\subsection{Milestone Report}
+\begin{itemize}
+\item Your milestone report will include hand written answers to 3 and 4 above.
+\item In addition, your milestone report must \textbf{include a data structure for an n-ary tree and a pseudo-code recursive algorithm to translate an arbitrary instance of these trees into postorder.}
+\item Use handin on the TEACH website to submit the gforth input file, makefile, and milestone report. We will generate the output file. 
+\item Click on these links to see a template for the Milestone Report and Makefile we will use in this class.
+\end{itemize}
+\newpage
+\section{Answers} \hrule
+\subsection{Forth Exercises}
+\begin{enumerate}
+
+\item printf("Hello World\ n");  
+\textbf{\\Command for gforth:} \\." Hello World!" 
+
+\item $10 + 7 - 3 * 5 / 12 $
+\textbf{\\Command for gforth:} \\ 10 7 + 3 5 * 12 / - .s \\
+\Tree [.- [.+ 
+              [.10 ] [.7 ] 
+          ]
+          [./ 
+              [.* 
+                  [.3 ] [.5 ] 
+              ] 
+              [.12 ] 
+          ] 
+       ]  
+
+\item $10.0 + 7.0 - 3.0 * 5.0 / 12.0$
+\textbf{\\Command for gforth:} \\ 10.0e0 7.0e0 F+ 3.0e0 5.0e0 F* 12.0e0 F/ F- f.s \\
+\Tree [.- [.+ 
+              [.10.0 ] [.7.0 ] 
+          ]
+          [./ 
+              [.* 
+                  [.3.0 ] [.5.0 ] 
+              ] 
+              [.12.0 ] 
+          ] 
+       ]  
+
+\item $10.0e0 + 7.0e0 - 3.0e0 * 5.0e0 / 12.0e0 $
+\textbf{\\Command for gforth:} \\ 10.0e0 7.0e0 F+ 3.0e0 5.0e0 F* 12.0e0 F/ F- f.s \\
+\Tree [.- [.+ 
+              [.10.0e0 ] [.7.0e0 ] 
+          ]
+          [./ 
+              [.* 
+                  [.3.0e0 ] [.5.0e0 ] 
+              ] 
+              [.12.0e0 ] 
+          ] 
+       ] 
+
+\newpage
+\item $10 + 7.0e0 - 3.0e0 * 5 / 12 $
+\textbf{\\Command for gforth:} \\ 10 7.0e0 s$>$f F+ 3.0e0 5.0e0 F* 12 s$>$f F/ F- f.s  \\
+\Tree [.- [.+ 
+              [.10 ] [.7.0e0 ] 
+          ]
+          [./ 
+              [.* 
+                  [.3.0e0 ] [.5 ] 
+              ] 
+              [.12 ] 
+          ] 
+       ]
+       
+\item \begin{verbatim}
+y = 10;
+x = 7.0e0;
+y + x - 3.0e0 * 5 / 12  
+\end{verbatim}
+\textbf{Command for gforth: }\\
+: p06 7.0e0 10 \{ y F: x \} y s$>$f x 3.0e0 5 s$>$f 12 s$>$f f/ f* f- f+ f. ;  \\
+Explanation: 
+\begin{itemize}
+\item Put value on stack for variables
+\item Redefine x and y
+\item Set values and convert if necessary 
+\item Calculate value as necessary
+\end{itemize} 
+\Tree [.p06 [.{y=10} ] 
+			[.{x=7.0e0} ] 
+			[.{y + x - 3.0e0 * 5 / 12} ] ]
+
+\item if 5 $<$ 3 then 7 else 2 \\
+\textbf{Command for gforth:} \\: TEST    5 4 $<$ ." 7" IF CR ." 2" THEN ;   \\
+\Tree [.$<$	[.5 [.print(7) ] ]
+			[.3 [.print(2) ] ]
+		]
+\item if 5 $>$ 3 then 7 else 2 \\
+\textbf{Command for gforth:} \\: TEST    5 4 $>$ ." 7" IF CR ." 2" THEN ; \\
+\Tree [.$>$	[.5 [.print(7) ] ]
+			[.3 [.print(2) ] ]
+		] 
+
+\newpage
+\item \begin{verbatim}
+for ( i = 0; i <= 5; i++ )
+    printf("%d ", i); $
+\end{verbatim}
+\textbf{Command for gforth:} \\: TEST   ( ) 5 BEGIN DUP . 1 - DUP 0 = UNTIL DROP  ;\\
+
+\Tree [.do-while [.body  [.print [.n ] ] [.- [.n ] [.1 ] ] ]
+				 [.$<$ [.0 ] [.n ] ] ] 
+
+\item \begin{verbatim}
+double convertint(int x)
+   { return ((double)x); } 
+\end{verbatim} 
+\textbf{Command for gforth:} \\ : TEST ( n -- r ) s$>$f CR CR .s CR f.s ;\\
+\Tree [.conv 	[.input [.x ]  ]
+				[.double [.x ] ]
+	  ]
+
+\item \begin{verbatim}
+int fact(int i)
+{
+    if (i <= 0 ) return 1;
+    else return i*fact(i-1);
+}
+\end{verbatim}
+\textbf{Command for gforth:}
+\begin{verbatim}
+: p11 ( ) dup 0 <= if 
+        drop 1 else 
+        dup 1 - recurse * 
+        endif ;
+\end{verbatim}
+
+\Tree [.fact    [.i ] 
+			    [.body 
+					[.$<=$ [.i ] [.0 ]  ]
+					[.return 
+						[.$*$ 
+							[.i ] 
+							[.fact [.$i-1$ ] ] 
+						]
+					]
+				]
+	  ]
+
+\item \begin{verbatim}
+int fib(int i)
+{
+    if(i == 0) return 0;
+    else if(i == 1) return 1;
+    else return fib(i-1) + fib(i-2);
+}
+\end{verbatim}
+\textbf{Command for gforth:}
+\begin{verbatim}
+: p12 ( fib ) dup 0 = if
+                drop 1 else
+                dup 1 = if
+                        drop 1 else
+                         1 - dup 1 - recurse swap recurse +
+                         endif
+                endif .s ;
+\end{verbatim}
+\Tree [.fib 	[.conditions [.i ] ]
+			[.body 	[.if 	[.== [.i ] [.0 ] ] [.return [.0 ] ] ]
+					[.elif  [.== [.i ] [.1 ] ]  [.return [.0 ] ] ]
+					[.else  	[.return [.$+$ [.fib [.- [.i ] [.1 ] ] ]
+									 	   [.fib [.- [.1 ] [.2 ] ] ]
+									 ]
+							]
+					]
+			]
+	  ]
+
+\end{enumerate}
+\newpage
+\subsection{Report}
+This milestone is designed to get us thinking about the options of storing and accessing data. This could be seen from the request for our pseudo-code for a n-ary tree. As for how I accomplished the forth exercises over the course of a few days and it can be seen that my understanding in increased, but it should also be noted that the questions get progressively more difficult. In the end I needed to verify that the programs were producing the correct output. Therefore the functions that were implemented I used multiple values and compared with the actual. As for the mathmaticall problems I plug in the numbers in to python and I also plugged them in to a computational knowledge engine called \href{"wolframalpha.com/input/?i=10%2B7.0e0-3.0e0*5%2F12"}{WolframAlpha}
+
+\subsection{pseudo-code for n-ary tree}
+An n-ary tree similar to a binary tree with the addition of more child nodes. This type of tree still contains only one root node and each node can contain many different properties allowing it to be great for accessing data. What makes it great for parsing lines of code is that the output language for this class that is desired is a post-fix language. Therefore, traversing a tree as post order will produce the correct semantics. At which point the grammar can be considered.
+
+\subsubsection{Things to consider when designing a n-ary tree}
+\begin{itemize}
+\item layout: I have put layout here primarily because \supervisor  has mentioned that there is a top down approach and a bottom up approach. She has told us that we our implementation will be a top down but I want to still think about how it could work as a bottom up. The primary reason \supervisor has said this is because we don't have time to implement a bottom up as it is more difficult.  
+\item Functions
+\begin{itemize}
+\item Add node
+\item Moving to a node
+\item Removing a node
+\item Print entire tree (pre, post and in-order traversal)
+\item Printing single node
+\end{itemize}
+
+\end{itemize}
+
+\newpage
+\subsection{Source For tree.py}
+\lstinputlisting[language=Python]{tree.py}
+\newpage
+\subsection{Source for gforth}
+\lstinputlisting{forthExercises.fs}
+
+
+
+\end{document}

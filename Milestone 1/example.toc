@@ -1,0 +1,12 @@
+\contentsline {section}{\numberline {1}Assignment}{2}{section.1}
+\contentsline {subsection}{\numberline {1.1}Introduction}{2}{subsection.1.1}
+\contentsline {subsection}{\numberline {1.2}Objective}{2}{subsection.1.2}
+\contentsline {subsection}{\numberline {1.3}Performance Objectives}{3}{subsection.1.3}
+\contentsline {subsection}{\numberline {1.4}Milestone Report}{3}{subsection.1.4}
+\contentsline {section}{\numberline {2}Answers}{4}{section.2}
+\contentsline {subsection}{\numberline {2.1}Forth Exercises}{4}{subsection.2.1}
+\contentsline {subsection}{\numberline {2.2}Report}{8}{subsection.2.2}
+\contentsline {subsection}{\numberline {2.3}pseudo-code for n-ary tree}{8}{subsection.2.3}
+\contentsline {subsubsection}{\numberline {2.3.1}Things to consider when designing a n-ary tree}{8}{subsubsection.2.3.1}
+\contentsline {subsection}{\numberline {2.4}Source For tree.py}{9}{subsection.2.4}
+\contentsline {subsection}{\numberline {2.5}Source for gforth}{11}{subsection.2.5}
