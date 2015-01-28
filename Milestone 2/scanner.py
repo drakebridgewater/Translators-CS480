@@ -6,10 +6,10 @@ class Tokenizer():
     def __init__(self):
         # tokens is a dictionary where each value is a list
         self.tokens = \
-            {"keywords": ['let', ':=', 'if', 'while', 'for', ';',
+            {"keywords": ['let', ':=', 'if', 'while', ';',
                           "true", "false"],
              "ops": ['and', 'or', 'not', '=', '+', '-', '/', '*',
-                     '<', '<=', '>', '>=', '!='],
+                     '<', '<=', '>', '>=', '!=', '(', ')'],
              'type': ['bool', 'int', 'real', 'string'],
              'mainScope': []}
         self.current_scope = 'mainScope'
@@ -28,15 +28,15 @@ class Tokenizer():
         # if subgroup given check it first
         if key != '':
             if value in self.tokens[key]:
-                print("The token " + value + " exist")
-                return True
+                print("The token '" + value + "' exist")
+                return key
 
         # if subgroup checking fails check all entries
         for x in self.tokens:
             if value in self.tokens[x]:
-                print("The token " + value + " exist")
-                return True
-        return False
+                print("The token '" + value + "' exist")
+                return x
+        return -1
 
     def add_scope(self, scope_name):
         # Add new scope
@@ -61,28 +61,30 @@ class Lexer():
         except EOFError:
             print("Reached end of file")
 
+    def reed_next_char(self):
+        return self.input.read(1)
+
     def control(self):
         while 1:
-            self.peek = self.input.read(1)
+            temp_peek = self.peek
             if self.peek == ' ' or self.peek == '\t':
                 print("found white space")
-                continue
             elif self.peek == '\n':
                 self.line += 1
-            elif self.peek in ('=', '+', '-', '/', '*', '<', '>', '!', ';', '%'):
+            elif self.peek in ('=', '+', '-', '/', '*', '<', '>', '!', ';', '%', '('):
                 self.is_operation()
             elif self.is_letter():
-                # identify the string and add to the token list
-                self.identify_string()
+                self.identify_string()  # identify the string and add to the token list
             elif self.is_digit():
-                # identify the number and add to the token list
-                self.is_number()
+                self.is_number()  # identify the number and add to the token list
             elif self.peek == ')':
-                # if ')' then current scope is ended
-                return
+                return  # if ')' then current scope is ended
             else:
                 print("ERROR: Could not identify on line: " + str(self.line) + " near char: '" + self.peek + "'")
                 break
+
+            if temp_peek == self.peek:
+                self.get_next_char()
 
     def is_operation(self):
         op = self.peek
@@ -93,6 +95,9 @@ class Lexer():
         elif op == '-':
             if self.peek == '-':
                 op += self.peek
+            elif self.is_digit():
+                self.is_number(op)
+                return
         elif op == '*':
             if self.peek == '*':
                 op += self.peek
@@ -104,7 +109,7 @@ class Lexer():
         if self.tokens.has_token(op, 'ops'):
             print("DEBUG: is_operation, self.tokens.has_token(" + op + "'ops') return true" + " on line " + str(
                 self.line))
-            self.token_list.append(("op", op))
+            self.token_list.append(("ops", op))
         else:
             print("DEBUG: is_operation, self.tokens.has_token(" + op + "'ops') return false" + " on line " + str(
                 self.line))
@@ -136,19 +141,7 @@ class Lexer():
             # TODO add next word to current scope with type info
             # Definition of token <TYPE, VariableName>
             print("print variable type")
-        elif word == 'for':
-            self.wait_for("(")
-            self.wait_for_expression()
-            self.wait_for(";")
-            self.wait_for_expression()
-            self.wait_for(";")
-            self.wait_for_expression()
-            self.wait_for(")")
-            self.wait_for("{")
-            self.tokens.add_scope("for")  # TODO check that create a new scope works
-            self.wait_for("(")
-            # TODO call control as it will return to here and will have to wait for closing bracket
-            self.control()  # if it returns then it saw a ')'
+            self.token_list.append(word, self.identify_string())
         elif word == "while":
             self.wait_for("(")
             self.wait_for_expression()
@@ -174,37 +167,34 @@ class Lexer():
                                  list(string.ascii_letters))
         # If the token is contained within the dictionary we don't need to add it
         # TODO Add to tree (next milestone)
-        if self.tokens.has_token(word):
-            print("Already contains token")
-        else:
-            self.tokens.add_token(self.tokens.get_current_scope(), word)
+        token_class = self.tokens.has_token(word)
+        if token_class == -1:
+            token_class = self.tokens.get_current_scope()
+            self.tokens.add_token(token_class, word)
+        self.token_list.append((token_class, word))
 
     # Function Description:
     # This function should be called after seeing the start of a number
     # If a period is present the number is converted to a float and returned
-    def is_number(self):
-        # TODO: add support for values like 2.3e2 (NEEDs testing)
-        value = ''
-        # assume no decimal until we see one
-        decimal_flag = False
-        while self.is_digit():
-            if self.peek == "." and decimal_flag:
-                # seen our second decimal return current value as a float
-                return float(value)
-            elif self.peek == '.' and not decimal_flag:
-                # seen our first decimal
-                decimal_flag = True
-            elif self.peek == 'e':
-                # once you 'e' has been seen no decimal can be used
-                decimal_flag = True
-            # append the digit to the value
-            value += self.peek
-            # move to the next char
-            self.get_next_char()
+    def is_number(self, value=''):
+        other_accepted = ['.']  # accept additional chars if we have seen certain chars
+        while self.is_digit(other_accepted):
+            if self.peek == ".":  # seen our first decimal
+                other_accepted.remove('.')
+            elif self.peek == 'e':  # once you 'e' has been seen no decimal can be used
+                if '.' in other_accepted:
+                    other_accepted.remove('.')
+                other_accepted.append("+")
+                other_accepted.append("-")
+            value += self.peek  # append the digit to the value
+            self.get_next_char()  # move to the next char
+            other_accepted.append('e')  # Once a number has been seen allow seeing an e
         if '.' in value or 'e' in value:
+            self.token_list.append(("float", float(value)))
             return float(value)
         else:
             try:
+                self.token_list.append(("int", int(value)))
                 return int(value)
             except ValueError:
                 print("ERROR (line: " + str(self.line) + "): could not determine numerical value")
@@ -213,7 +203,7 @@ class Lexer():
     # checks to see if the current value in peek is a digit or '.'
     # return true if it is
     def is_digit(self, others=[]):
-        digits = ['.', '0', '1', '2', '3', '4', '5', '6', '7', '9', 'e']
+        digits = ['.', '0', '1', '2', '3', '4', '5', '6', '7', '9']
         for x in others:
             if x not in digits:
                 digits.append(x)
