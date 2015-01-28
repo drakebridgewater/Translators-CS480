@@ -6,7 +6,7 @@ class Tokenizer():
     def __init__(self):
         # tokens is a dictionary where each value is a list
         self.tokens = \
-            {"keywords": ['let', ':=', 'if', 'then', 'while', 'for', ';',
+            {"keywords": ['let', ':=', 'if', 'while', 'for', ';',
                           "true", "false"],
              "ops": ['and', 'or', 'not', '=', '+', '-', '/', '*',
                      '<', '<=', '>', '>=', '!='],
@@ -56,7 +56,10 @@ class Lexer():
         self.token_list = []
 
     def get_next_char(self):
-        self.peek = self.input.read(1)
+        try:
+            self.peek = self.input.read(1)
+        except EOFError:
+            print("Reached end of file")
 
     def control(self):
         while 1:
@@ -74,6 +77,9 @@ class Lexer():
             elif self.is_digit():
                 # identify the number and add to the token list
                 self.is_number()
+            elif self.peek == ')':
+                # if ')' then current scope is ended
+                return
             else:
                 print("ERROR: Could not identify on line: " + str(self.line) + " near char: '" + self.peek + "'")
                 break
@@ -102,6 +108,65 @@ class Lexer():
         else:
             print("DEBUG: is_operation, self.tokens.has_token(" + op + "'ops') return false" + " on line " + str(
                 self.line))
+
+    def get_assignment(self, word):
+        print("receive word and going to set to expression")
+
+    def wait_for_expression(self):
+        print("looking for expression")
+
+    def wait_for(self, value):
+        while 1:
+            self.peek = self.input.read(1)
+            if self.peek == ' ' or self.peek == '\t':
+                # print("found white space")
+                continue
+            elif self.peek == '\n':
+                # print("found new line")
+                self.line += 1
+            elif self.peek == value:
+                return True
+            else:
+                print("ERROR (line:" + str(self.line) + ") looking for '" +
+                      str(value) + "' but found '" + str(self.peek) + "'")
+                return False
+
+    def expression_identification(self, word):
+        if word in ['bool', 'int', 'real', "string"]:
+            # TODO add next word to current scope with type info
+            # Definition of token <TYPE, VariableName>
+            print("print variable type")
+        elif word == 'for':
+            self.wait_for("(")
+            self.wait_for_expression()
+            self.wait_for(";")
+            self.wait_for_expression()
+            self.wait_for(";")
+            self.wait_for_expression()
+            self.wait_for(")")
+            self.wait_for("{")
+            self.tokens.add_scope("for")  # TODO check that create a new scope works
+            self.wait_for("(")
+            # TODO call control as it will return to here and will have to wait for closing bracket
+            self.control()  # if it returns then it saw a ')'
+        elif word == "while":
+            self.wait_for("(")
+            self.wait_for_expression()
+            self.wait_for(")")
+            self.wait_for("{")
+            self.tokens.add_scope("while")  # TODO check that create a new scope works
+            self.wait_for("(")
+            # TODO call control as it will return to here and will have to wait for closing bracket
+            self.control()  # if it returns then it saw a ')'
+        elif word == "if":
+            self.wait_for("(")
+            self.wait_for_expression()
+            self.wait_for(")")
+            self.wait_for("{")
+            self.tokens.add_scope("if")  # TODO check that create a new scope works
+            self.wait_for("(")
+            # TODO call control as it will return to here and will have to wait for closing bracket
+            self.control()  # if it returns then it saw a ')'
 
     def identify_string(self):
         word = self.parse_string(list(string.ascii_letters) +
