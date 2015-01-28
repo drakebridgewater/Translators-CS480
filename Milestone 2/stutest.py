@@ -1,6 +1,8 @@
 __author__ = 'Drake'
 import sys
 
+from scanner import Tokenizer, Lexer
+
 
 def main():
     tokenizer = Tokenizer()
