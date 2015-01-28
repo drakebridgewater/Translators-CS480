@@ -6,9 +6,9 @@ class Tokenizer():
     def __init__(self):
         # tokens is a dictionary where each value is a list
         self.tokens = \
-            {"keywords": ['let', ':=', "if", "then", "while", "for", ';',
+            {"keywords": ['let', ':=', 'if', 'then', 'while', 'for', ';',
                           "true", "false"],
-             "ops": ["and", "or", "not", '=', '+', '-', '/', '*',
+             "ops": ['and', 'or', 'not', '=', '+', '-', '/', '*',
                      '<', '<=', '>', '>=', '!='],
              'type': ['bool', 'int', 'real', 'string'],
              'mainScope': []}
@@ -22,7 +22,7 @@ class Tokenizer():
     # Example add_token(('mainScope', 'test'))
     def add_token(self, key, value):
         # TODO create a method for adding to the token dictionary
-        self.tokens[key].insert(value)
+        self.tokens[key].insert(len(self.tokens[key]), value)
 
     def has_token(self, value, key=''):
         # if subgroup given check it first
@@ -33,11 +33,10 @@ class Tokenizer():
 
         # if subgroup checking fails check all entries
         for x in self.tokens:
-            if value in x:
+            if value in self.tokens[x]:
                 print("The token " + value + " exist")
                 return True
-            else:
-                return False
+        return False
 
     def add_scope(self, scope_name):
         # Add new scope
@@ -63,6 +62,7 @@ class Lexer():
         while 1:
             self.peek = self.input.read(1)
             if self.peek == ' ' or self.peek == '\t':
+                print("found white space")
                 continue
             elif self.peek == '\n':
                 self.line += 1
@@ -70,12 +70,12 @@ class Lexer():
                 self.is_operation()
             elif self.is_letter():
                 # identify the string and add to the token list
-                self.identify_string(self.parse_string())
+                self.identify_string()
             elif self.is_digit():
                 # identify the number and add to the token list
-                self.is_number
+                self.is_number()
             else:
-                print("ERROR: Could not identify on line: " + self.line + " near char: '" + self.peek + "'")
+                print("ERROR: Could not identify on line: " + str(self.line) + " near char: '" + self.peek + "'")
                 break
 
     def is_operation(self):
@@ -96,12 +96,14 @@ class Lexer():
                 op += self.peek
         # elif op in ('%', ';', '/', '='):
         if self.tokens.has_token(op, 'ops'):
-            print("DEBUG: is_operation, self.tokens.has_token(" + op + "'ops') return true")
+            print("DEBUG: is_operation, self.tokens.has_token(" + op + "'ops') return true" + " on line " + str(
+                self.line))
             self.token_list.append(("op", op))
         else:
-            print("DEBUG: is_operation, self.tokens.has_token(" + op + "'ops') return false")
+            print("DEBUG: is_operation, self.tokens.has_token(" + op + "'ops') return false" + " on line " + str(
+                self.line))
 
-    def identify_string(self, word):
+    def identify_string(self):
         word = self.parse_string(list(string.ascii_letters) +
                                  list(string.digits) + list('_'),
                                  list(string.ascii_letters))
@@ -109,13 +111,8 @@ class Lexer():
         # TODO Add to tree (next milestone)
         if self.tokens.has_token(word):
             print("Already contains token")
-            return
         else:
-            try:
-                print("Attempting to add token to current scope")
-                self.tokens.add_token(self.tokens.get_current_scope(), word)
-            except ValueError:
-                print("Failed to add token to token dictionary")
+            self.tokens.add_token(self.tokens.get_current_scope(), word)
 
     # Function Description:
     # This function should be called after seeing the start of a number
@@ -151,7 +148,7 @@ class Lexer():
     # checks to see if the current value in peek is a digit or '.'
     # return true if it is
     def is_digit(self, others=[]):
-        digits = ['.', '0', '1', '2', '3', '4', '5', '6', '7', '9']
+        digits = ['.', '0', '1', '2', '3', '4', '5', '6', '7', '9', 'e']
         for x in others:
             if x not in digits:
                 digits.append(x)
