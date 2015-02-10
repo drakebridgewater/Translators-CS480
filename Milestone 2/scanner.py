@@ -1,4 +1,5 @@
-ª__author__ = 'Drake'
+#!/usr/bin/python
+# __author__ = 'Drake'
 import string
 
 
@@ -6,10 +7,10 @@ class Tokenizer():
     def __init__(self):
         # tokens is a dictionary where each value is a list
         self.tokens = \
-            {"keywords": ['let', ':=', 'if', 'while', ';',
+            {"keywords": ['stdout', 'let', ':=', 'if', 'while', ';',
                           "true", "false"],
              "ops": ['and', 'or', 'not', '=', '+', '-', '/', '*',
-                     '<', '<=', '>', '>=', '!=', '(', ')'],
+                     '<', '<=', '>', '>=', '!=', '(', ')', '%', '^'],
              'type': ['bool', 'int', 'real', 'string'],
              'mainScope': []}
         self.current_scope = 'mainScope'
@@ -28,13 +29,11 @@ class Tokenizer():
         # if subgroup given check it first
         if key != '':
             if value in self.tokens[key]:
-                print("The token '" + value + "' exist")
                 return key
 
         # if subgroup checking fails check all entries
         for x in self.tokens:
             if value in self.tokens[x]:
-                print("The token '" + value + "' exist")
                 return x
         return -1
 
@@ -51,68 +50,78 @@ class Lexer():
     def __init__(self, file, tokenizer):
         self.line = 1
         self.input = file
-        self.peek = ' '
+        self.current_char = ' '
+        self.pointer = 0
         self.tokens = tokenizer
         self.token_list = []
+        self.current_state = True  # When false throw error
 
     def get_next_char(self):
         try:
-            self.peek = self.input.read(1)
+            self.current_char = self.input.read(1)
         except EOFError:
             print("Reached end of file")
 
     def reed_next_char(self):
         return self.input.read(1)
 
+    def peek(self):
+        self.current_char = self.input.read(1)
+        self.pointer -= 1
+
+    def add_token(self, token):
+        self.token_list.append(token)
+        if self.pointer != 0:
+            self.current_char = self.input.read(self.pointer)
+            self.pointer = 0
+
+    def print_tokens(self):
+        for x in self.token_list:
+            print(x)
+
     def control(self):
         while 1:
-            temp_peek = self.peek
-            if self.peek == ' ' or self.peek == '\t':
-                print("found white space")
-            elif self.peek == '\n':
+            if self.current_char == ' ' or self.current_char == '\t':
+                self.get_next_char()
+                pass
+            elif self.current_char == '\n':
+                self.get_next_char()
                 self.line += 1
-            elif self.peek in ('=', '+', '-', '/', '*', '<', '>', '!', ';', '%', '('):
+            elif self.current_char in ('=', '+', '-', '/', '*', '<', '>', '!', ';', '%', '(', ')'):
                 self.is_operation()
             elif self.is_letter():
-                self.identify_string()  # identify the string and add to the token list
+                self.identify_word()  # identify the string and add to the token list
             elif self.is_digit():
                 self.is_number()  # identify the number and add to the token list
-            elif self.peek == ')':
-                return  # if ')' then current scope is ended
+            elif self.current_char == '"':
+                self.add_token(("ops", '"'))
+                self.get_next_char()
+                # self.parse_string()                 # parse a string
             else:
-                print("ERROR: Could not identify on line: " + str(self.line) + " near char: '" + self.peek + "'")
+                print("ERROR: Could not identify on line: " + str(self.line) + " near char: '" + self.current_char + "'")
                 break
 
-            if temp_peek == self.peek:
-                self.get_next_char()
-
     def is_operation(self):
-        op = self.peek
-        self.get_next_char()
+        op = self.current_char
         if op == '+':
-            if self.peek == '+':
-                op += self.peek
+            pass
         elif op == '-':
-            if self.peek == '-':
-                op += self.peek
+            if self.current_char == '-':
+                op += self.current_char
             elif self.is_digit():
                 self.is_number(op)
                 return
         elif op == '*':
-            if self.peek == '*':
-                op += self.peek
+            pass
         elif op in ('<', '>', '!'):
             self.get_next_char()
-            if self.peek == '=':
-                op += self.peek
+            if self.current_char == '=':
+                op += self.current_char
         # elif op in ('%', ';', '/', '='):
-        if self.tokens.has_token(op, 'ops'):
-            print("DEBUG: is_operation, self.tokens.has_token(" + op + "'ops') return true" + " on line " + str(
-                self.line))
-            self.token_list.append(("ops", op))
-        else:
-            print("DEBUG: is_operation, self.tokens.has_token(" + op + "'ops') return false" + " on line " + str(
-                self.line))
+
+        key = self.tokens.has_token(op)
+        self.pointer = 1
+        self.add_token((key, op))
 
     def get_assignment(self, word):
         print("receive word and going to set to expression")
@@ -122,18 +131,18 @@ class Lexer():
 
     def wait_for(self, value):
         while 1:
-            self.peek = self.input.read(1)
-            if self.peek == ' ' or self.peek == '\t':
+            self.current_char = self.input.read(1)
+            if self.current_char == ' ' or self.current_char == '\t':
                 # print("found white space")
                 continue
-            elif self.peek == '\n':
+            elif self.current_char == '\n':
                 # print("found new line")
                 self.line += 1
-            elif self.peek == value:
+            elif self.current_char in value:
                 return True
             else:
                 print("ERROR (line:" + str(self.line) + ") looking for '" +
-                      str(value) + "' but found '" + str(self.peek) + "'")
+                      str(value) + "' but found '" + str(self.current_char) + "'")
                 return False
 
     def expression_identification(self, word):
@@ -141,7 +150,7 @@ class Lexer():
             # TODO add next word to current scope with type info
             # Definition of token <TYPE, VariableName>
             print("print variable type")
-            self.token_list.append(word, self.identify_string())
+            self.token_list.append(word, self.identify_word())
         elif word == "while":
             self.wait_for("(")
             self.wait_for_expression()
@@ -161,8 +170,17 @@ class Lexer():
             # TODO call control as it will return to here and will have to wait for closing bracket
             self.control()  # if it returns then it saw a ')'
 
-    def identify_string(self):
-        word = self.parse_string(list(string.ascii_letters) +
+    def parse_string(self):
+        accepted_chars = ['"']
+        new_string = ''
+        self.get_next_char()
+        while self.current_char in accepted_chars:
+            new_string += self.current_char
+            self.get_next_char()
+        self.token_list.append(("string", new_string))
+
+    def identify_word(self):
+        word = self.parse_word(list(string.ascii_letters) +
                                  list(string.digits) + list('_'),
                                  list(string.ascii_letters))
         # If the token is contained within the dictionary we don't need to add it
@@ -171,30 +189,54 @@ class Lexer():
         if token_class == -1:
             token_class = self.tokens.get_current_scope()
             self.tokens.add_token(token_class, word)
-        self.token_list.append((token_class, word))
+        self.pointer = 1
+        self.add_token((token_class, word))
+
+    # Function Description:
+    # This function should be called when a word identifier or keyword is started
+    # and will return the full word upon seeing invalid characters.
+    def parse_word(self, accepted_chars, acceptable_first_chars=[]):
+        if self.current_char not in acceptable_first_chars:
+            return -1
+        else:
+            word = ''
+            while self.current_char in accepted_chars:
+                word += self.current_char
+                self.get_next_char()
+            return word
 
     # Function Description:
     # This function should be called after seeing the start of a number
     # If a period is present the number is converted to a float and returned
     def is_number(self, value=''):
+        value += self.current_char
+        self.peek()
         other_accepted = ['.']  # accept additional chars if we have seen certain chars
         while self.is_digit(other_accepted):
-            if self.peek == ".":  # seen our first decimal
-                other_accepted.remove('.')
-            elif self.peek == 'e':  # once you 'e' has been seen no decimal can be used
+            if self.current_char == ".":  # seen our first decimal
+                if '.' in other_accepted:  # we see . and we have not seen one befoe this
+                    other_accepted.remove('.')
+                else:
+                    self.pointer = 0
+                    self.add_token(("float", float(value)))
+                    return float(value)
+                    # the . does not get appended as it is another number
+            elif self.current_char == 'e':  # once you 'e' has been seen no decimal can be used
                 if '.' in other_accepted:
                     other_accepted.remove('.')
                 other_accepted.append("+")
                 other_accepted.append("-")
-            value += self.peek  # append the digit to the value
-            self.get_next_char()  # move to the next char
+            value += self.current_char  # append the digit to the value
+            self.peek()  # move to the next char
             other_accepted.append('e')  # Once a number has been seen allow seeing an e
         if '.' in value or 'e' in value:
-            self.token_list.append(("float", float(value)))
+            self.pointer = 0
+            self.add_token(("float", float(value)))
             return float(value)
         else:
             try:
-                self.token_list.append(("int", int(value)))
+                self.pointer = 0
+                self.add_token(("int", int(value)))
                 return int(value)
             except ValueError:
                 print("ERROR (line: " + str(self.line) + "): could not determine numerical value")
@@ -207,7 +249,7 @@ class Lexer():
         for x in others:
             if x not in digits:
                 digits.append(x)
-        if self.peek in digits:
+        if self.current_char in digits:
             return True
         return False
 
@@ -219,19 +261,6 @@ class Lexer():
         for x in others:
             if x not in letters:
                 letters.append(x)
-        if self.peek in letters:
+        if self.current_char in letters:
             return True
         return False
-
-    # Function Description:
-    # This function should be called when a word identifier or keyword is started
-    # and will return the full word upon seeing invalid characters.
-    def parse_string(self, accepted_chars, acceptable_first_chars=[]):
-        if self.peek not in acceptable_first_chars:
-            return -1
-        else:
-            word = ''
-            while self.peek in accepted_chars:
-                word += self.peek
-                self.get_next_char()
-            return word

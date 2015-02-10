@@ -18,10 +18,29 @@
 \usepackage{geometry}
 \geometry{textheight=8.5in, textwidth=6in}
 
+\usepackage{tikz}
+\usetikzlibrary{arrows,automata}
+
+%----------------------------------------------------------------------------------------
+%       Box arround answers use: 
+%		\begin{mdframed}[style=MyFrame]
+%		\end{mdframed}
+%----------------------------------------------------------------------------------------
 \usepackage{etex}
 \usepackage{tikz}
 \usepackage{tikz-qtree}
 
+\usepackage[framemethod=TikZ]{mdframed}
+\mdfdefinestyle{MyFrame}{%
+    innertopmargin=\baselineskip,
+    innerbottommargin=\baselineskip,
+    innerrightmargin=20pt,
+    innerleftmargin=20pt,
+    backgroundcolor=gray!5!white,
+    splitbottomskip = 5mm,
+    splittopskip = 5mm,
+    skipabove=5mm}
+    
 %----------------------------------------------------------------------------------------
 %         Setting for importing code files
 %     http://en.wikibooks.org/wiki/LaTeX/Source_Code_Listings
@@ -70,7 +89,7 @@
 \usepackage{hyperref}
 
 \def\name{Drake Bridgewater }
-\def\title{Milestone 1: Introduction to \textit{gforth}}
+\def\title{Milestone 2: Scanner Design}
 \def\subject{CS }
 \def\courseNumber{352 }
 \def\courseName{TRANSLATORS }
@@ -162,252 +181,73 @@ DUE 01/16/15 (11:59pm)\\
 \newpage
 
 
-\section{Assignment} \hrule
-\subsection{Introduction} 
-The output of our compiler will be the input to the "machine." In C, the compiler generates an object file, the familiar .o file, that is then linked into the a.out file. To actually run the program you must still cause the operating system to load a.out file into memory for the machine to execute.
-
-For our project, we will instead use the program gforth. gforth is almost completely opposite of Lisp. The syntactic format for gforth is postorder. While Lisp has some syntax, gforth only has spelling rules. As an example,
-
-our 1+2 expression in C would be entered as
-
-1 2 +
-
-in gforth.
-
-\subsection{Objective}
-\begin{itemize}
-\item Objective 1 is to introduce you to gforth. Gforth will be the machine that we code to.
-\begin{itemize}
-\item reversing list: 1 2 3 rot rot swap .s 
-\end{itemize}
-\item Objective 2 is to emphasize the crucial role of generalized trees and generalized postorder traversal.
-\item  Objective 3 is to get you to formulate a generalized expression tree data structure.
-\end{itemize}
+\section{Assignment 1} \hrule
+Read the Naive Semantics document and determine what the various types of tokens are required. Now develop a data structure for these tokens.
+\begin{mdframed}[style=MyFrame]
+The portion of this had me thinking for multiple days and since I am implementing this in python I decided to use a dictionary as it is stored as a hash table accessing the elements and finding the elements will be straight forward. When it came to storing the variables in the correct place I started thinking about scope and actually implemented a way of managing scopes. I have it made so that I can access any new elements get added to the main scope and when a new scope is defined it is added to the dictionary as a dictionary in a dictionary. 
+\end{mdframed}
 
 
+\section{Assignment 2: Finite State Automata} \hrule
+The finite state automata (sing. automaton) paradigm is the basis for the design of the scanner. The finite state automata paradigm as describe in theory texts has two registers (or memory locations) that hold the current character and current state. The program for the machine can be displayed in several standard ways; I want to emphasize a graphical presentation because it is easier to change during design.
+
+To understand the programs, we must first understand the machine execution cycle. This is actually not much different from the cycle used in a standard computer.
+
+\begin{mdframed}[style=MyFrame]
+Parsing a number: I have decided to include one of my FSAs as it depicts my thinking as to how numbers are parsed \\
+\begin{tikzpicture}[>=stealth',shorten >=1pt,auto,node distance=3cm]
+  \node[initial,state] (S)      {$S$};
+  \node[state]         (q1) [right of=S]  {$q_1$};
+  \node[state, accepting]         
+  					   (q3) [below of=q1] {$q_3$};
+  \node[state]         
+  					   (q4) [right of=q3] {$q_4$};
+  \node[state, accepting]         
+  					   (q6) [right of=q4] {$q_6$};
+  \node[state, accepting]         
+  					   (q5) [below of=q3] {$q_5$};
 
 
+  \path[->] 
+  		(S)  edge [bend left]  		node {\textbf{0-9}} 	(q1)
+             edge [bend right] 		node {\textbf{.}} 		(q3)
+             edge [bend right] 		node {\textbf{+, -}} 	(q5)
+        (q1) edge [bend right] 		node {\textbf{.}} 		(q3)
+        (q3) edge [loop above] 		node {\textbf{0-9}}		(q3)
+             edge [bend left]  		node {\textbf{e}} 		(q4)
+        (q4) edge [bend left] 		node {\textbf{0-9}}		(q6)
+        (q5) edge [loop above] 		node {\textbf{0-9}}		(q5)
+             edge [bend left] 		node {\textbf{.}} 		(q3)
+        (q6) edge [loop above] 		node {\textbf{0-9}}		(q6);
+\end{tikzpicture}
+\end{mdframed}
+\section{Assignment 3} \hrule
+The technical difference between automaton and machine is that an automaton only gives an accept-reject response while a machine does transformations.
+
+Assignment 2 only develop the yes/no portion of the scanner. The scanner must produce a token as output and therefore, we need to think about the saving of characters, possibly converting some (like integers or special characters in strings), etc. We denote this by the weight.
+
+Modify your output of assignment 2 to reflect the processing to save and convert characters to form tokens.
+\begin{mdframed}[style=MyFrame]
+This portion was rather easy as I was already storing the data I just had to print the data structure and with python this was easy just calling the print on the dictionary. 
+\end{mdframed}
 
 
-Professional Methods and Values
-
-The professional will learn to use many programming languages and paradigms throughout her/his professional career. The hallmark of the professional in this venue is the ability to quickly master a new programming language or paradigm and to relate the new to the old.
-
-Assignment
-
-The below exercises are simple "Hello World" type exercises. These short program segments or small programs are designed to get you to understand how to learn a new language: you pretty much just sit down and try some standard things that you already know must work.
-\newpage
-\subsection{Performance Objectives}
-
-In this milestone, you have several clear performance objectives.
-\begin{enumerate}
-
-\item Learn to run gforth on either a Departmental machine or how to install and use gforth on your own machine.
-\item Learn the simple programming style of gforth. Documentation/Download information is given on the links page.
-\item \textbf{Translate a the infix style expressions in the Initial Forth Exercises 1 - 11 to an expression tree. The output here is a drawn tree. You do not need to include the printf statements as part of your tree. The printf is just to make sure you know to print the answer, not just calculate it.}
-\item\textbf{ Do a postorder traversal of the expression tree to generate the gforth input. The output of this step is gforth code.}
-\item Produce running gforth code that evaluates the programs equivalent to initial exercises. The output here is the running of the gforth code.
-\end{enumerate}
-\subsection{Milestone Report}
-\begin{itemize}
-\item Your milestone report will include hand written answers to 3 and 4 above.
-\item In addition, your milestone report must \textbf{include a data structure for an n-ary tree and a pseudo-code recursive algorithm to translate an arbitrary instance of these trees into postorder.}
-\item Use handin on the TEACH website to submit the gforth input file, makefile, and milestone report. We will generate the output file. 
-\item Click on these links to see a template for the Milestone Report and Makefile we will use in this class.
-\end{itemize}
-\newpage
-\section{Answers} \hrule
-\subsection{Forth Exercises}
-\begin{enumerate}
-
-\item printf("Hello World\ n");  
-\textbf{\\Command for gforth:} \\." Hello World!" 
-
-\item $10 + 7 - 3 * 5 / 12 $
-\textbf{\\Command for gforth:} \\ 10 7 + 3 5 * 12 / - .s \\
-\Tree [.- [.+ 
-              [.10 ] [.7 ] 
-          ]
-          [./ 
-              [.* 
-                  [.3 ] [.5 ] 
-              ] 
-              [.12 ] 
-          ] 
-       ]  
-
-\item $10.0 + 7.0 - 3.0 * 5.0 / 12.0$
-\textbf{\\Command for gforth:} \\ 10.0e0 7.0e0 F+ 3.0e0 5.0e0 F* 12.0e0 F/ F- f.s \\
-\Tree [.- [.+ 
-              [.10.0 ] [.7.0 ] 
-          ]
-          [./ 
-              [.* 
-                  [.3.0 ] [.5.0 ] 
-              ] 
-              [.12.0 ] 
-          ] 
-       ]  
-
-\item $10.0e0 + 7.0e0 - 3.0e0 * 5.0e0 / 12.0e0 $
-\textbf{\\Command for gforth:} \\ 10.0e0 7.0e0 F+ 3.0e0 5.0e0 F* 12.0e0 F/ F- f.s \\
-\Tree [.- [.+ 
-              [.10.0e0 ] [.7.0e0 ] 
-          ]
-          [./ 
-              [.* 
-                  [.3.0e0 ] [.5.0e0 ] 
-              ] 
-              [.12.0e0 ] 
-          ] 
-       ] 
-
-\newpage
-\item $10 + 7.0e0 - 3.0e0 * 5 / 12 $
-\textbf{\\Command for gforth:} \\ 10 7.0e0 s$>$f F+ 3.0e0 5.0e0 F* 12 s$>$f F/ F- f.s  \\
-\Tree [.- [.+ 
-              [.10 ] [.7.0e0 ] 
-          ]
-          [./ 
-              [.* 
-                  [.3.0e0 ] [.5 ] 
-              ] 
-              [.12 ] 
-          ] 
-       ]
-       
-\item \begin{verbatim}
-y = 10;
-x = 7.0e0;
-y + x - 3.0e0 * 5 / 12  
-\end{verbatim}
-\textbf{Command for gforth: }\\
-: p06 7.0e0 10 \{ y F: x \} y s$>$f x 3.0e0 5 s$>$f 12 s$>$f f/ f* f- f+ f. ;  \\
-Explanation: 
-\begin{itemize}
-\item Put value on stack for variables
-\item Redefine x and y
-\item Set values and convert if necessary 
-\item Calculate value as necessary
-\end{itemize} 
-\Tree [.p06 [.{y=10} ] 
-			[.{x=7.0e0} ] 
-			[.{y + x - 3.0e0 * 5 / 12} ] ]
-
-\item if 5 $<$ 3 then 7 else 2 \\
-\textbf{Command for gforth:} \\: TEST    5 4 $<$ ." 7" IF CR ." 2" THEN ;   \\
-\Tree [.$<$	[.5 [.print(7) ] ]
-			[.3 [.print(2) ] ]
-		]
-\item if 5 $>$ 3 then 7 else 2 \\
-\textbf{Command for gforth:} \\: TEST    5 4 $>$ ." 7" IF CR ." 2" THEN ; \\
-\Tree [.$>$	[.5 [.print(7) ] ]
-			[.3 [.print(2) ] ]
-		] 
-
-\newpage
-\item \begin{verbatim}
-for ( i = 0; i <= 5; i++ )
-    printf("%d ", i); $
-\end{verbatim}
-\textbf{Command for gforth:} \\: TEST   ( ) 5 BEGIN DUP . 1 - DUP 0 = UNTIL DROP  ;\\
-
-\Tree [.do-while [.body  [.print [.n ] ] [.- [.n ] [.1 ] ] ]
-				 [.$<$ [.0 ] [.n ] ] ] 
-
-\item \begin{verbatim}
-double convertint(int x)
-   { return ((double)x); } 
-\end{verbatim} 
-\textbf{Command for gforth:} \\ : TEST ( n -- r ) s$>$f CR CR .s CR f.s ;\\
-\Tree [.conv 	[.input [.x ]  ]
-				[.double [.x ] ]
-	  ]
-
-\item \begin{verbatim}
-int fact(int i)
-{
-    if (i <= 0 ) return 1;
-    else return i*fact(i-1);
-}
-\end{verbatim}
-\textbf{Command for gforth:}
-\begin{verbatim}
-: p11 ( ) dup 0 <= if 
-        drop 1 else 
-        dup 1 - recurse * 
-        endif ;
-\end{verbatim}
-
-\Tree [.fact    [.i ] 
-			    [.body 
-					[.$<=$ [.i ] [.0 ]  ]
-					[.return 
-						[.$*$ 
-							[.i ] 
-							[.fact [.$i-1$ ] ] 
-						]
-					]
-				]
-	  ]
-
-\item \begin{verbatim}
-int fib(int i)
-{
-    if(i == 0) return 0;
-    else if(i == 1) return 1;
-    else return fib(i-1) + fib(i-2);
-}
-\end{verbatim}
-\textbf{Command for gforth:}
-\begin{verbatim}
-: p12 ( fib ) dup 0 = if
-                drop 1 else
-                dup 1 = if
-                        drop 1 else
-                         1 - dup 1 - recurse swap recurse +
-                         endif
-                endif .s ;
-\end{verbatim}
-\Tree [.fib 	[.conditions [.i ] ]
-			[.body 	[.if 	[.== [.i ] [.0 ] ] [.return [.0 ] ] ]
-					[.elif  [.== [.i ] [.1 ] ]  [.return [.0 ] ] ]
-					[.else  	[.return [.$+$ [.fib [.- [.i ] [.1 ] ] ]
-									 	   [.fib [.- [.1 ] [.2 ] ] ]
-									 ]
-							]
-					]
-			]
-	  ]
-
-\end{enumerate}
-\newpage
 \subsection{Report}
-This milestone is designed to get us thinking about the options of storing and accessing data. This could be seen from the request for our pseudo-code for a n-ary tree. As for how I accomplished the forth exercises over the course of a few days and it can be seen that my understanding in increased, but it should also be noted that the questions get progressively more difficult. In the end I needed to verify that the programs were producing the correct output. Therefore the functions that were implemented I used multiple values and compared with the actual. As for the mathmaticall problems I plug in the numbers in to python and I also plugged them in to a computational knowledge engine called \href{"wolframalpha.com/input/?i=10%2B7.0e0-3.0e0*5%2F12"}{WolframAlpha}
+%Handwritten Answers to Milestone Questions:
+%Specification (what do you think the purpose of this milestone is)
+%Processing (how did you go about solving the problem)
+%Testing Requirement (how did you test for correctness)
+%Retrospective (what did you learn in this milestone)
 
-\subsection{pseudo-code for n-ary tree}
-An n-ary tree similar to a binary tree with the addition of more child nodes. This type of tree still contains only one root node and each node can contain many different properties allowing it to be great for accessing data. What makes it great for parsing lines of code is that the output language for this class that is desired is a post-fix language. Therefore, traversing a tree as post order will produce the correct semantics. At which point the grammar can be considered.
+\begin{mdframed}[style=MyFrame]
+This assignment was to create a scanner that reads source code written in IBTL and figure out if the tokens are accepted in the language. To solve this problem I worked to process words and add them to a list, but quickly realized that a list will not be great at storing token and symbols. Therefore, I implemented a dictionary that would allow finding of symbols quicker; the keys are the different types of and one of the keys contains the scope which contains additional scopes. To make sure that my implementation worked I looked at the FSA and used sequences of tokens that should be accepted and sequences of tokens that should fail. In the end I learned that scanning for tokens character by character is much easier then when you scan by spaces which I was originally thinking. 
+\end{mdframed}
 
-\subsubsection{Things to consider when designing a n-ary tree}
-\begin{itemize}
-\item layout: I have put layout here primarily because \supervisor  has mentioned that there is a top down approach and a bottom up approach. She has told us that we our implementation will be a top down but I want to still think about how it could work as a bottom up. The primary reason \supervisor has said this is because we don't have time to implement a bottom up as it is more difficult.  
-\item Functions
-\begin{itemize}
-\item Add node
-\item Moving to a node
-\item Removing a node
-\item Print entire tree (pre, post and in-order traversal)
-\item Printing single node
-\end{itemize}
 
-\end{itemize}
 
 \newpage
-\subsection{Source For tree.py}
-\lstinputlisting[language=Python]{tree.py}
-\newpage
-\subsection{Source for gforth}
-\lstinputlisting{forthExercises.fs}
+\subsection{Source For scanner.py}
+\lstinputlisting[language=Python]{scanner.py}
 
 
 

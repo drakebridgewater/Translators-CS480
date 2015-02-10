@@ -12,30 +12,31 @@ dvi: ${TARGET}.tex
 #	echo entered pygmentize
 #	pygmentize -f latex -o __${SRC}.tex ${SRC}
 
+	rm -rf log_latex
 #	run latex twice to get references correct
-	latex ${TARGET}.tex
+	latex ${TARGET}.tex >> log_latex
 
 #	you can also have a bibtex line here
 #	bibtex $(TARGET).tex
-	latex $(TARGET).tex
+	latex $(TARGET).tex >> log_latex
 
 #	remove the pygmentized output to avoid cluttering up the directory
 #	rm __${SRC}.tex
 
 ps: dvi
 	echo entered ps
-	dvips -R -Poutline -t letter ${TARGET}.dvi -o ${TARGET}.ps
+	dvips -R -Poutline -t letter ${TARGET}.dvi -o ${TARGET}.ps >> log_latex
 
 pdf: ps
 	echo entered pdf
-	ps2pdf ${TARGET}.ps
+	ps2pdf ${TARGET}.ps >> log_latex
 
 
 html:
 	echo entered html 
 	cp ${TARGET}.tex ${HTML}.tex
-	latex ${HTML}.tex
-	latex2html -split 0 -noshow_section_numbers -local_icons -no_navigation -noinfo -noaddress ${HTML}
+	latex ${HTML}.tex >> log_latex
+	latex2html -split 0 -noshow_section_numbers -local_icons -no_navigation -noinfo -noaddress ${HTML} >> log_latex
 
 	sed 's/<BR><HR>//g' < ${HTML}/index.html > ${HTML}/index2.html
 	mv ${HTML}/index2.html ${TARGET}.html
@@ -59,10 +60,8 @@ clean:
 ##=============================================================================
 
 stutest.out:
-	echo 'Running stutest.in'
-	python stutest.py
-	gforth forthExercises.fs > stutest.out
-
+	echo 'Running stutest.in and storing int stutest.out'
+	python main.py test > stutest.out
 
 	
 ##=============================================================================
@@ -70,6 +69,6 @@ stutest.out:
 ##=============================================================================
 
 proftest.out:
-	echo 'Running proftest.out'
-	gforth proftest.in > proftest.out
+	echo 'Running proftest.in and storing in proftest.out'
+	python3.4 main.py proftest.in > proftest.out
 
