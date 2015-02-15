@@ -5,7 +5,7 @@ import string
 
 class Tokenizer():
     def __init__(self):
-        # tokens is a dictionary where each value is a list
+        # tokens is a dictionary where each data is a list
         self.tokens = \
             {"keywords": ['stdout', 'let', ':=', 'if', 'while', ';',
                           "true", "false"],
@@ -226,7 +226,7 @@ class Lexer():
                     other_accepted.remove('.')
                 other_accepted.append("+")
                 other_accepted.append("-")
-            value += self.current_char  # append the digit to the value
+            value += self.current_char  # append the digit to the data
             self.peek()  # move to the next char
             other_accepted.append('e')  # Once a number has been seen allow seeing an e
         if '.' in value or 'e' in value:
@@ -239,10 +239,10 @@ class Lexer():
                 self.add_token(("int", int(value)))
                 return int(value)
             except ValueError:
-                print("ERROR (line: " + str(self.line) + "): could not determine numerical value")
+                print("ERROR (line: " + str(self.line) + "): could not determine numerical data")
 
     # Function Description:
-    # checks to see if the current value in peek is a digit or '.'
+    # checks to see if the current data in peek is a digit or '.'
     # return true if it is
     def is_digit(self, others=[]):
         digits = ['.', '0', '1', '2', '3', '4', '5', '6', '7', '9']
@@ -254,7 +254,7 @@ class Lexer():
         return False
 
     # Function Description:
-    # checks to see if the current value in peek is a letter
+    # checks to see if the current data in peek is a letter
     # return true if it is
     def is_letter(self, others=[]):
         letters = list(string.ascii_letters)

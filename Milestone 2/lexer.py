@@ -28,7 +28,7 @@ class Lexer():
         self.token_list = []
         self.current_state = True  # When false throw error
         self.accepted_ops = ('=', '+', '-', '/', '*', '<', '>', '!', ';', ':', '%', '(', ')', '^')
-        # tokens is a dictionary where each value is a list
+        # tokens is a dictionary where each data is a list
         self.tokens = \
             {"keywords": ['stdout', 'let', ':=', 'if', 'while', ';',
                           "true", "false"],
@@ -94,9 +94,9 @@ class Lexer():
                 self.send_token((self.has_token(item), item))
             elif self.current_char is '-':
                 self.get_next_char()
-                if self.current_char is '-':
-                    item += self.current_char  # Seen -- make new token
-                    self.get_next_char()
+                # if self.current_char is '-':
+                #    item += self.current_char  # Seen -- make new token
+                #    self.get_next_char()
                 self.send_token((self.has_token(item), item))
             elif self.current_char in ('<', '>', '!'):
                 self.get_next_char()
@@ -277,17 +277,17 @@ class Lexer():
                 return float(word)
             except ValueError:
                 print("Lexer Error (line: " + str(self.line) +
-                      "): could not determine numerical value of: " + str(word))
+                      "): could not determine numerical data of: " + str(word))
         else:
             try:
                 self.send_token(("int", int(word)))
                 return int(word)
             except ValueError:
                 print("Lexer Error (line: " + str(self.line) +
-                      "): could not determine numerical value of: " + str(word))
+                      "): could not determine numerical data of: " + str(word))
 
     # Function Description:
-    # checks to see if the current value in peek is a digit or '.'
+    # checks to see if the current data in peek is a digit or '.'
     # return true if it is
     def is_digit(self, others=[], exclude=[]):
         digits = ['.', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
@@ -302,7 +302,7 @@ class Lexer():
         return False
 
     # Function Description:
-    # checks to see if the current value in peek is a letter
+    # checks to see if the current data in peek is a letter
     # return true if it is
     def is_letter(self, others=[]):
         letters = list(string.ascii_letters)
