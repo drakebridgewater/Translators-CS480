@@ -5,7 +5,7 @@ import string
 # class Ops(Enum):
 # EQ = '='
 # ADD = '+'
-#     SUB = '-'
+# SUB = '-'
 #     DIV = '/'
 #     MULT = '*'
 #     LT = '<'
@@ -28,7 +28,7 @@ class Lexer():
         self.token_list = []
         self.current_state = True  # When false throw error
         self.accepted_ops = ('=', '+', '-', '/', '*', '<', '>', '!', ';', ':', '%', '(', ')', '^')
-        # tokens is a dictionary where each data is a list
+        # tokens is a dictionary where each token is a list
         self.tokens = \
             {"keywords": ['stdout', 'let', ':=', 'if', 'while', ';',
                           "true", "false"],
@@ -277,17 +277,17 @@ class Lexer():
                 return float(word)
             except ValueError:
                 print("Lexer Error (line: " + str(self.line) +
-                      "): could not determine numerical data of: " + str(word))
+                      "): could not determine numerical token of: " + str(word))
         else:
             try:
                 self.send_token(("int", int(word)))
                 return int(word)
             except ValueError:
                 print("Lexer Error (line: " + str(self.line) +
-                      "): could not determine numerical data of: " + str(word))
+                      "): could not determine numerical token of: " + str(word))
 
     # Function Description:
-    # checks to see if the current data in peek is a digit or '.'
+    # checks to see if the current token in peek is a digit or '.'
     # return true if it is
     def is_digit(self, others=[], exclude=[]):
         digits = ['.', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
@@ -302,7 +302,7 @@ class Lexer():
         return False
 
     # Function Description:
-    # checks to see if the current data in peek is a letter
+    # checks to see if the current token in peek is a letter
     # return true if it is
     def is_letter(self, others=[]):
         letters = list(string.ascii_letters)

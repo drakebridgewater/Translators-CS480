@@ -25,13 +25,13 @@ class Node():
             return -1
         return self.children[idx]
 
-    #   Takes a data and return a child
+    # Takes a token and return a child
     def get_child(self, child_value):
         for child in self.children:
             if child_value == child.value:
                 return child
 
-        # return a error that it does not contain data searching for
+        # return a error that it does not contain token searching for
         return -1
 
     def add_child(self, child):
@@ -54,7 +54,7 @@ class Tree():
         self.currentLocation = self.root
 
     def add_node(self, value):
-        print("adding node with data: " + value)
+        print("adding node with token: " + value)
         newNode = Node(value)
         self.currentLocation.add_child(newNode)
         self.size += 1
@@ -62,7 +62,7 @@ class Tree():
     def go_to_child_node(self, child_value):
         print("trying to move to: " + child_value)
         nextMove = self.currentLocation.get_child(child_value)
-        print("Moving to child with data: " + nextMove.get_value())
+        print("Moving to child with token: " + nextMove.get_value())
         if nextMove != -1:
             self.currentLocation = nextMove
         else:

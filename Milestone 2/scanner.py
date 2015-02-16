@@ -5,7 +5,7 @@ import string
 
 class Tokenizer():
     def __init__(self):
-        # tokens is a dictionary where each data is a list
+        # tokens is a dictionary where each token is a list
         self.tokens = \
             {"keywords": ['stdout', 'let', ':=', 'if', 'while', ';',
                           "true", "false"],
@@ -98,7 +98,8 @@ class Lexer():
                 self.get_next_char()
                 # self.parse_string()                 # parse a string
             else:
-                print("ERROR: Could not identify on line: " + str(self.line) + " near char: '" + self.current_char + "'")
+                print(
+                    "ERROR: Could not identify on line: " + str(self.line) + " near char: '" + self.current_char + "'")
                 break
 
     def is_operation(self):
@@ -181,8 +182,8 @@ class Lexer():
 
     def identify_word(self):
         word = self.parse_word(list(string.ascii_letters) +
-                                 list(string.digits) + list('_'),
-                                 list(string.ascii_letters))
+                               list(string.digits) + list('_'),
+                               list(string.ascii_letters))
         # If the token is contained within the dictionary we don't need to add it
         # TODO Add to tree (next milestone)
         token_class = self.tokens.has_token(word)
@@ -226,7 +227,7 @@ class Lexer():
                     other_accepted.remove('.')
                 other_accepted.append("+")
                 other_accepted.append("-")
-            value += self.current_char  # append the digit to the data
+            value += self.current_char  # append the digit to the token
             self.peek()  # move to the next char
             other_accepted.append('e')  # Once a number has been seen allow seeing an e
         if '.' in value or 'e' in value:
@@ -239,10 +240,10 @@ class Lexer():
                 self.add_token(("int", int(value)))
                 return int(value)
             except ValueError:
-                print("ERROR (line: " + str(self.line) + "): could not determine numerical data")
+                print("ERROR (line: " + str(self.line) + "): could not determine numerical token")
 
     # Function Description:
-    # checks to see if the current data in peek is a digit or '.'
+    # checks to see if the current token in peek is a digit or '.'
     # return true if it is
     def is_digit(self, others=[]):
         digits = ['.', '0', '1', '2', '3', '4', '5', '6', '7', '9']
@@ -254,7 +255,7 @@ class Lexer():
         return False
 
     # Function Description:
-    # checks to see if the current data in peek is a letter
+    # checks to see if the current token in peek is a letter
     # return true if it is
     def is_letter(self, others=[]):
         letters = list(string.ascii_letters)
