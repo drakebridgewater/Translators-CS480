@@ -1,5 +1,8 @@
 __author__ = 'Drake'
 
+files = []
+options = []
+
 OPER_EQ = '='
 OPER_ASSIGN = ':='
 OPER_ADD = '+'

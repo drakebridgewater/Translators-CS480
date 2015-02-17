@@ -16,6 +16,14 @@ class MyParser(object):
         self.current_state = True
         self.tokens = []
         self.line = 0
+        self.current_token_index = 0
+
+    def exit(self):
+        self.tree.print_tree()
+        exit()
+
+    def parse_error(self, msg=''):
+        print("PARSE ERROR: [line: " + str(self.line) + "] " + msg)
 
     # Function Description:
     # will return a single token as the lexer may spit out multiple
@@ -23,16 +31,19 @@ class MyParser(object):
         # if not self.tokens:
         if len(self.tokens) == 0:
             self.tokens.append(self.lexer.get_token())
+            if self.tokens[0] == -1:
+                self.current_state = False  # Done reading file
+                return None
             self.line = self.tokens[0].line
-        return self.tokens[0]
+        return self.tokens[self.current_token_index]
 
     def remove_token(self):
         # TODO instead of removing move integer to point to next value
         if len(self.tokens) > 0:
             self.tokens.pop()
 
-    def restore_tokens(self, token):
-        self.tokens = token
+    def restore_tokens(self, idx):
+        self.current_token_index = idx
 
     def print_tokens(self):
         try:
@@ -61,27 +72,30 @@ class MyParser(object):
             self.lexer.close_file()
 
     def is_value(self, token, compare):
-        save = self.tokens.copy()
+        if not self.current_state:
+            return None
+        save = self.current_token_index
         if token.value == compare:
+            self.remove_token()
             return Node(token)
         else:
             self.restore_tokens(save)
             return None
 
     def s(self):
+        if not self.current_state:
+            return None
         # s -> expr S' | ( S"
         new_node = Node("S")
-        save = self.tokens.copy()
-        if new_node.add_child(self.expr()):
-            new_node.add_child(self.s_prime())
-        elif self.get_token().value == L_PAREN:
-            new_node.add_child(self.tokens[0])
-            self.remove_token()
+        save = self.current_token_index
+        if new_node.add_child(self.is_value(self.get_token(), L_PAREN)):
             new_node.add_child(self.s_double_prime())
+        elif new_node.add_child(self.expr()):
+            new_node.add_child(self.s_prime())
         else:
             self.restore_tokens(save)
             print("ERROR")
-            pass
+            self.current_state = False
         # if len(new_node.children) > 0:
         # return new_node
         # else:
@@ -89,26 +103,29 @@ class MyParser(object):
         return new_node
 
     def s_prime(self):
+        if not self.current_state:
+            return None
         # s' -> S S' | epsilon
         new_node = Node("S'")
-        save = self.tokens.copy()
+        save = self.current_token_index
         if new_node.add_child(self.s()):
             new_node.add_child(self.s_prime())
         else:
             self.restore_tokens(save)
-            return None
+            new_node.add_child("epsilon")
         return new_node
 
     def s_double_prime(self):
-        # S" -> ) S' | S ) S'
+        if not self.current_state:
+            return None
+        # S" ->  )S' | S)S'
         new_node = Node('S"')
-        save = self.tokens.copy()
-        if new_node.add_child((self.s_prime())):
-            pass
+        save = self.current_token_index
+        if new_node.add_child(self.is_value(self.get_token(), R_PAREN)):
+            if new_node.add_child((self.s_prime())):
+                pass
         elif new_node.add_child((self.s())):
-            if self.get_token().value == L_PAREN:
-                new_node.add_child(self.tokens[0])
-                self.remove_token()
+            if new_node.add_child(self.is_value(self.get_token(), R_PAREN)):
                 new_node.add_child(self.s_prime())
         else:
             self.restore_tokens(save)
@@ -116,9 +133,11 @@ class MyParser(object):
         return new_node
 
     def expr(self):
+        if not self.current_state:
+            return None
         # expr -> oper | stmts
         new_node = Node("expr")
-        save = self.tokens.copy()
+        save = self.current_token_index
         if new_node.add_child(self.oper()):
             pass
         elif new_node.add_child((self.stmts())):
@@ -129,24 +148,26 @@ class MyParser(object):
         return new_node
 
     def oper(self):
+        if not self.current_state:
+            return None
         # oper ->   ( := name oper )
         # ( binops oper oper )
         # ( unops oper )
         # constants
         # name
         new_node = Node("oper")
-        save = self.tokens.copy()
-        if self.get_token().value == L_PAREN:
+        save = self.current_token_index
+        if new_node.add_child(self.is_value(self.get_token(), L_PAREN)):
             new_node.add_child(self.tokens[0])
             self.remove_token()
-            if self.get_token().value == OPER_ASSIGN:
+            if new_node.add_child(self.is_value(self.get_token(), OPER_ASSIGN)):
                 new_node.add_child(self.tokens[0])
                 self.remove_token()
                 if self.get_token().type == "keyword":
                     new_node.add_child(self.tokens[0])
                     self.remove_token()
                     if new_node.add_child(self.oper()):
-                        if self.get_token().value == R_PAREN:
+                        if new_node.add_child(self.is_value(self.get_token(), R_PAREN)):
                             new_node.add_child(self.tokens[0])
                             self.remove_token()
                         else:
@@ -164,7 +185,7 @@ class MyParser(object):
             elif new_node.add_child(self.binops()):
                 if new_node.add_child(self.oper()):
                     if new_node.add_child(self.oper()):
-                        if self.get_token().value == R_PAREN:
+                        if new_node.add_child(self.is_value(self.get_token(), R_PAREN)):
                             new_node.add_child(self.tokens[0])
                             self.remove_token()
                         else:
@@ -179,7 +200,7 @@ class MyParser(object):
                     self.parse_error("missing expected oper")
             elif new_node.add_child(self.unops()):
                 if new_node.add_child(self.oper()):
-                    if self.get_token().value == R_PAREN:
+                    if new_node.add_child(self.is_value(self.get_token(), R_PAREN)):
                         new_node.add_child(self.tokens[0])
                         self.remove_token()
                     else:
@@ -204,53 +225,52 @@ class MyParser(object):
             return None
         return new_node
 
-    def parse_error(self, msg=''):
-        print("PARSE ERROR: [line: " + str(self.line) + "] " + msg)
-
     def binops(self):
         # binops -> + | - | * | / | % | ^ | = | > | >= | < | <= | != | or | and
+        if not self.current_state:
+            return None
         new_node = Node("binops")
-        save = self.tokens.copy()
-        if self.get_token().value == OPER_ADD:
+        save = self.current_token_index
+        if new_node.add_child(self.is_value(self.get_token(), OPER_ADD)):
             new_node.add_child(self.tokens[0])
             self.remove_token()
-        elif self.get_token().value == OPER_SUB:
+        elif new_node.add_child(self.is_value(self.get_token(), OPER_SUB)):
             new_node.add_child(self.tokens[0])
             self.remove_token()
-        elif self.get_token().value == OPER_MULT:
+        elif new_node.add_child(self.is_value(self.get_token(), OPER_MULT)):
             new_node.add_child(self.tokens[0])
             self.remove_token()
-        elif self.get_token().value == OPER_DIV:
+        elif new_node.add_child(self.is_value(self.get_token(), OPER_DIV)):
             new_node.add_child(self.tokens[0])
             self.remove_token()
-        elif self.get_token().value == OPER_MOD:
+        elif new_node.add_child(self.is_value(self.get_token(), OPER_MOD)):
             new_node.add_child(self.tokens[0])
             self.remove_token()
-        elif self.get_token().value == OPER_EXP:
+        elif new_node.add_child(self.is_value(self.get_token(), OPER_EXP)):
             new_node.add_child(self.tokens[0])
             self.remove_token()
-        elif self.get_token().value == OPER_EQ:
+        elif new_node.add_child(self.is_value(self.get_token(), OPER_EQ)):
             new_node.add_child(self.tokens[0])
             self.remove_token()
-        elif self.get_token().value == OPER_LT:
+        elif new_node.add_child(self.is_value(self.get_token(), OPER_LT)):
             new_node.add_child(self.tokens[0])
             self.remove_token()
-        elif self.get_token().value == OPER_LE:
+        elif new_node.add_child(self.is_value(self.get_token(), OPER_LE)):
             new_node.add_child(self.tokens[0])
             self.remove_token()
-        elif self.get_token().value == OPER_GT:
+        elif new_node.add_child(self.is_value(self.get_token(), OPER_GT)):
             new_node.add_child(self.tokens[0])
             self.remove_token()
-        elif self.get_token().value == OPER_GE:
+        elif new_node.add_child(self.is_value(self.get_token(), OPER_GE)):
             new_node.add_child(self.tokens[0])
             self.remove_token()
-        elif self.get_token().value == OPER_NE:
+        elif new_node.add_child(self.is_value(self.get_token(), OPER_NE)):
             new_node.add_child(self.tokens[0])
             self.remove_token()
-        elif self.get_token().value == OPER_OR:
+        elif new_node.add_child(self.is_value(self.get_token(), OPER_OR)):
             new_node.add_child(self.tokens[0])
             self.remove_token()
-        elif self.get_token().value == OPER_AND:
+        elif new_node.add_child(self.is_value(self.get_token(), OPER_AND)):
             new_node.add_child(self.tokens[0])
             self.remove_token()
         else:
@@ -261,18 +281,20 @@ class MyParser(object):
 
     def unops(self):
         # unops -> - | not | sin | cos | tan
+        if not self.current_state:
+            return None
         new_node = Node("unops")
-        save = self.tokens.copy()
-        if self.get_token().value == OPER_NOT:
+        save = self.current_token_index
+        if new_node.add_child(self.is_value(self.get_token(), OPER_NOT)):
             new_node.add_child(self.tokens[0])
             self.remove_token()
-        elif self.get_token().value == OPER_SIN:
+        elif new_node.add_child(self.is_value(self.get_token(), OPER_SIN)):
             new_node.add_child(self.tokens[0])
             self.remove_token()
-        elif self.get_token().value == OPER_COS:
+        elif new_node.add_child(self.is_value(self.get_token(), OPER_COS)):
             new_node.add_child(self.tokens[0])
             self.remove_token()
-        elif self.get_token().value == OPER_TAN:
+        elif new_node.add_child(self.is_value(self.get_token(), OPER_TAN)):
             new_node.add_child(self.tokens[0])
             self.remove_token()
         else:
@@ -283,8 +305,10 @@ class MyParser(object):
 
     def constants(self):
         # constants -> string | ints | floats
+        if not self.current_state:
+            return None
         new_node = Node("constant")
-        save = self.tokens.copy()
+        save = self.current_token_index
         if new_node.add_child(self.strings()):
             pass
         elif new_node.add_child(self.ints()):
@@ -299,8 +323,10 @@ class MyParser(object):
     def strings(self):
         # strings ->    reg_ex for str literal in C (“any alphanumeric”)
         # true | false
+        if not self.current_state:
+            return None
         new_node = Node("string")
-        save = self.tokens.copy()
+        save = self.current_token_index
         if self.get_token().type == TYPE_STRING:
             new_node.add_child(self.tokens[0])
             self.remove_token()
@@ -316,8 +342,10 @@ class MyParser(object):
         # name -> reg_ex for ids in C (any lower and upper char
         # or underscore followed by any combination of lower,
         # upper, digits, or underscores)
+        if not self.current_state:
+            return None
         new_node = Node("name")
-        save = self.tokens.copy()
+        save = self.current_token_index
         if self.get_token().type == TYPE_ID:
             new_node.add_child(self.tokens[0])
             self.remove_token()
@@ -328,8 +356,10 @@ class MyParser(object):
 
     def ints(self):
         # ints -> reg ex for positive/negative ints in C
+        if not self.current_state:
+            return None
         new_node = Node("int")
-        save = self.tokens.copy()
+        save = self.current_token_index
         if self.get_token().type == TYPE_INT:
             new_node.add_child(self.tokens[0])
             self.remove_token()
@@ -340,8 +370,10 @@ class MyParser(object):
 
     def floats(self):
         # floats -> reg ex for positive/negative doubles in C
+        if not self.current_state:
+            return None
         new_node = Node("float")
-        save = self.tokens.copy()
+        save = self.current_token_index
         if self.get_token().type == TYPE_REAL:
             new_node.add_child(self.tokens[0])
             self.remove_token()
@@ -352,8 +384,10 @@ class MyParser(object):
 
     def stmts(self):
         # stmts -> ifstmts | whilestmts | letstmts |printsmts
+        if not self.current_state:
+            return None
         new_node = Node("stmts")
-        save = self.tokens.copy()
+        save = self.current_token_index
         if new_node.add_child(self.ifstmts()):
             pass
         elif new_node.add_child(self.whilestmts()):
@@ -370,16 +404,18 @@ class MyParser(object):
 
     def printstmts(self):
         # printstmts -> (stdout oper)
+        if not self.current_state:
+            return None
         new_node = Node("printstmts")
-        save = self.tokens.copy()
-        if self.get_token().value == L_PAREN:
+        save = self.current_token_index
+        if new_node.add_child(self.is_value(self.get_token(), L_PAREN)):
             new_node.add_child(self.tokens[0])
             self.remove_token()
-            if self.get_token().value == KEYWORD_STDOUT:
+            if new_node.add_child(self.is_value(self.get_token(), KEYWORD_STDOUT)):
                 new_node.add_child(self.tokens[0])
                 self.remove_token()
                 if new_node.add_child(self.oper()):
-                    if self.get_token().value == R_PAREN:
+                    if new_node.add_child(self.is_value(self.get_token(), R_PAREN)):
                         new_node.add_child(self.tokens[0])
                         self.remove_token()
                     else:
@@ -402,22 +438,24 @@ class MyParser(object):
 
     def ifstmts(self):
         # ifstmts -> (if expr expr expr) | (if expr expr)
+        if not self.current_state:
+            return None
         new_node = Node("ifstmts")
-        save = self.tokens.copy()
-        if self.get_token().value == L_PAREN:
+        save = self.current_token_index
+        if new_node.add_child(self.is_value(self.get_token(), L_PAREN)):
             new_node.add_child(self.tokens[0])
             self.remove_token()
             if new_node.add_child(self.expr()):
                 if new_node.add_child(self.expr()):
                     if new_node.add_child(self.expr()):
-                        if self.get_token().value == R_PAREN:
+                        if new_node.add_child(self.is_value(self.get_token(), R_PAREN)):
                             new_node.add_child(self.tokens[0])
                             self.remove_token()
                         else:
                             self.parse_error("missing right paren")
                             self.restore_tokens(save)
                             return None
-                    elif self.get_token().value == R_PAREN:
+                    elif new_node.add_child(self.is_value(self.get_token(), R_PAREN)):
                         new_node.add_child(self.tokens[0])
                         self.remove_token()
                     else:
@@ -440,17 +478,19 @@ class MyParser(object):
 
     def whilestmts(self):
         # whilestmts -> (while expr exprlist)
+        if not self.current_state:
+            return None
         new_node = Node("whilestmts")
-        save = self.tokens.copy()
-        if self.get_token().value == L_PAREN:
+        save = self.current_token_index
+        if new_node.add_child(self.is_value(self.get_token(), L_PAREN)):
             new_node.add_child(self.tokens[0])
             self.remove_token()
-            if self.get_token().value == KEYWORD_WHILE:
+            if new_node.add_child(self.is_value(self.get_token(), KEYWORD_WHILE)):
                 new_node.add_child(self.tokens[0])
                 self.remove_token()
                 if new_node.add_child(self.expr()):
                     if new_node.add_child(self.exprlist()):
-                        if self.get_token().value == R_PAREN:
+                        if new_node.add_child(self.is_value(self.get_token(), R_PAREN)):
                             new_node.add_child(self.tokens[0])
                             self.remove_token()
                         else:
@@ -477,8 +517,10 @@ class MyParser(object):
 
     def exprlist(self):
         # exprlist -> expr | expr exprlist
+        if not self.current_state:
+            return None
         new_node = Node("exprlist")
-        save = self.tokens.copy()
+        save = self.current_token_index
         if new_node.add_child(self.expr()):
             if new_node.add_child(self.exprlist()):
                 pass
@@ -490,22 +532,24 @@ class MyParser(object):
 
     def letstmts(self):
         # letstmts -> (let (varlist))
+        if not self.current_state:
+            return None
         new_node = Node("letstmts")
-        save = self.tokens.copy()
-        if self.get_token().value == L_PAREN:
+        save = self.current_token_index
+        if new_node.add_child(self.is_value(self.get_token(), L_PAREN)):
             new_node.add_child(self.tokens[0])
             self.remove_token()
-            if self.get_token().value == KEYWORD_LET:
+            if new_node.add_child(self.is_value(self.get_token(), KEYWORD_LET)):
                 new_node.add_child(self.tokens[0])
                 self.remove_token()
-                if self.get_token().value == L_PAREN:
+                if new_node.add_child(self.is_value(self.get_token(), L_PAREN)):
                     new_node.add_child(self.tokens[0])
                     self.remove_token()
                     if new_node.add_child(self.varlist()):
-                        if self.get_token().value == R_PAREN:
+                        if new_node.add_child(self.is_value(self.get_token(), R_PAREN)):
                             new_node.add_child(self.tokens[0])
                             self.remove_token()
-                            if self.get_token().value == R_PAREN:
+                            if new_node.add_child(self.is_value(self.get_token(), R_PAREN)):
                                 new_node.add_child(self.tokens[0])
                                 self.remove_token()
                             else:
@@ -536,16 +580,18 @@ class MyParser(object):
 
     def varlist(self):
         # varlist -> (name type) | (name type) varlist
+        if not self.current_state:
+            return None
         new_node = Node("varlist")
-        save = self.tokens.copy()
-        if self.get_token().value == L_PAREN:
+        save = self.current_token_index
+        if new_node.add_child(self.is_value(self.get_token(), L_PAREN)):
             new_node.add_child(self.tokens[0])
             self.remove_token()
             if self.get_token().type == TYPE_ID:
                 new_node.add_child(self.tokens[0])
                 self.remove_token()
                 if new_node.add_child(self.type()):
-                    if self.get_token().value == R_PAREN:
+                    if new_node.add_child(self.is_value(self.get_token(), R_PAREN)):
                         new_node.add_child(self.tokens[0])
                         self.remove_token()
                         if new_node.add_child(self.varlist()):
@@ -570,18 +616,20 @@ class MyParser(object):
 
     def type(self):
         # type -> bool | int | real | string
+        if not self.current_state:
+            return None
         new_node = Node("type")
-        save = self.tokens.copy()
-        if self.get_token().value == TYPE_BOOL:
+        save = self.current_token_index
+        if new_node.add_child(self.is_value(self.get_token(), TYPE_BOOL)):
             new_node.add_child(self.tokens[0])
             self.remove_token()
-        elif self.get_token().value == TYPE_INT:
+        elif new_node.add_child(self.is_value(self.get_token(), TYPE_INT)):
             new_node.add_child(self.tokens[0])
             self.remove_token()
-        elif self.get_token().value == TYPE_REAL:
+        elif new_node.add_child(self.is_value(self.get_token(), TYPE_REAL)):
             new_node.add_child(self.tokens[0])
             self.remove_token()
-        elif self.get_token().value == TYPE_STRING:
+        elif new_node.add_child(self.is_value(self.get_token(), TYPE_STRING)):
             new_node.add_child(self.tokens[0])
             self.remove_token()
         else:

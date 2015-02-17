@@ -89,7 +89,8 @@
 \usepackage{hyperref}
 
 \def\name{Drake Bridgewater }
-\def\title{Milestone 2: Scanner Design}
+\def\title{Milestone 3: IBTL Parser }
+\def\subtitle{Recursive Descent Parser}
 \def\subject{CS }
 \def\courseNumber{352 }
 \def\courseName{TRANSLATORS }
@@ -132,7 +133,8 @@
 %----------------------------------------------------------------------------------------
 
 \HRule \\[0.4cm]
-{ \huge \bfseries \title }\\[0.4cm] % Title of your document
+{ \huge \bfseries \title }\\[0.1cm] % Title of your document
+{\small \textit{\textbf{ \subtitle }}}\\[0.2cm]
 \HRule \\[7.5cm]
  
 %----------------------------------------------------------------------------------------
@@ -180,59 +182,29 @@ DUE 01/16/15 (11:59pm)\\
 \vfill % Fill the rest of the page with whitespace
 \newpage
 
-
-\section{Assignment 1} \hrule
-Read the Naive Semantics document and determine what the various types of tokens are required. Now develop a data structure for these tokens.
+\section{Source Code Descriptions}
 \begin{mdframed}[style=MyFrame]
-The portion of this had me thinking for multiple days and since I am implementing this in python I decided to use a dictionary as it is stored as a hash table accessing the elements and finding the elements will be straight forward. When it came to storing the variables in the correct place I started thinking about scope and actually implemented a way of managing scopes. I have it made so that I can access any new elements get added to the main scope and when a new scope is defined it is added to the dictionary as a dictionary in a dictionary. 
+The way I approached this problem was one paper with drawing out what how I would perform each of of the operations for a given string. With a few iterations I was able to create the parser that logically followed the grammar, but some modification we needed to account for the left recursion and to factor out the repeated tokens. 
+\end{mdframed}
+\subsection{node.py}
+\begin{mdframed}[style=MyFrame]
+Since a tree is just a single node with child nodes I created a node that would allow printing in a familiar format for easy readability 
+\end{mdframed}
+\subsection{defines.py}
+\begin{mdframed}[style=MyFrame]
+I decided to place all the global variable into a file for easy manipulation. This fill contains the token ID and also defines what a token is. 
+\end{mdframed}
+\subsection{myparser.py}
+\begin{mdframed}[style=MyFrame]
+The bulk of this project was to develop a parser that will spit out a list of tokens in a fashion that would allow seeing scope. \supervisor recommended that we implement it as a tree therefore the node I created. Every time I saw a object in the grammar including 's', 'expr', 'oper', etc. I would create a token and depending on how it is related to its parent it would be added as a child or as a leaf node along side. Once I had this idea I need to come up with a way of documenting my trails to the node for debugging purposes therefore I added a need node each time a function was called and when a function was called within it would be added as a child. 
+\end{mdframed}
+\subsection{lexer.py}
+\begin{mdframed}[style=MyFrame]
+The lexer of this assignment was to recognize the chars one at a time and take the one with the longest prefix. This would allow gathering o 
 \end{mdframed}
 
-
-\section{Assignment 2: Finite State Automata} \hrule
-The finite state automata (sing. automaton) paradigm is the basis for the design of the scanner. The finite state automata paradigm as describe in theory texts has two registers (or memory locations) that hold the current character and current state. The program for the machine can be displayed in several standard ways; I want to emphasize a graphical presentation because it is easier to change during design.
-
-To understand the programs, we must first understand the machine execution cycle. This is actually not much different from the cycle used in a standard computer.
-
-\begin{mdframed}[style=MyFrame]
-Parsing a number: I have decided to include one of my FSAs as it depicts my thinking as to how numbers are parsed \\
-\begin{tikzpicture}[>=stealth',shorten >=1pt,auto,node distance=3cm]
-  \node[initial,state] (S)      {$S$};
-  \node[state]         (q1) [right of=S]  {$q_1$};
-  \node[state, accepting]         
-  					   (q3) [below of=q1] {$q_3$};
-  \node[state]         
-  					   (q4) [right of=q3] {$q_4$};
-  \node[state, accepting]         
-  					   (q6) [right of=q4] {$q_6$};
-  \node[state, accepting]         
-  					   (q5) [below of=q3] {$q_5$};
-
-
-  \path[->] 
-  		(S)  edge [bend left]  		node {\textbf{0-9}} 	(q1)
-             edge [bend right] 		node {\textbf{.}} 		(q3)
-             edge [bend right] 		node {\textbf{+, -}} 	(q5)
-        (q1) edge [bend right] 		node {\textbf{.}} 		(q3)
-        (q3) edge [loop above] 		node {\textbf{0-9}}		(q3)
-             edge [bend left]  		node {\textbf{e}} 		(q4)
-        (q4) edge [bend left] 		node {\textbf{0-9}}		(q6)
-        (q5) edge [loop above] 		node {\textbf{0-9}}		(q5)
-             edge [bend left] 		node {\textbf{.}} 		(q3)
-        (q6) edge [loop above] 		node {\textbf{0-9}}		(q6);
-\end{tikzpicture}
-\end{mdframed}
-\section{Assignment 3} \hrule
-The technical difference between automaton and machine is that an automaton only gives an accept-reject response while a machine does transformations.
-
-Assignment 2 only develop the yes/no portion of the scanner. The scanner must produce a token as output and therefore, we need to think about the saving of characters, possibly converting some (like integers or special characters in strings), etc. We denote this by the weight.
-
-Modify your output of assignment 2 to reflect the processing to save and convert characters to form tokens.
-\begin{mdframed}[style=MyFrame]
-This portion was rather easy as I was already storing the data I just had to print the data structure and with python this was easy just calling the print on the dictionary. 
-\end{mdframed}
-
-
-\subsection{Report}
+\newpage
+\section{Report}
 %Handwritten Answers to Milestone Questions:
 %Specification (what do you think the purpose of this milestone is)
 %Processing (how did you go about solving the problem)
@@ -240,14 +212,23 @@ This portion was rather easy as I was already storing the data I just had to pri
 %Retrospective (what did you learn in this milestone)
 
 \begin{mdframed}[style=MyFrame]
-This assignment was to create a scanner that reads source code written in IBTL and figure out if the tokens are accepted in the language. To solve this problem I worked to process words and add them to a list, but quickly realized that a list will not be great at storing token and symbols. Therefore, I implemented a dictionary that would allow finding of symbols quicker; the keys are the different types of and one of the keys contains the scope which contains additional scopes. To make sure that my implementation worked I looked at the FSA and used sequences of tokens that should be accepted and sequences of tokens that should fail. In the end I learned that scanning for tokens character by character is much easier then when you scan by spaces which I was originally thinking. 
+\textbf{The purpose} of this mile stone was to ensure that we can store, retrieve and redistribute in such a way that the grammar is followed. This ensures that we understand the code that we are writing and verifies we understood what we needed to do. Like many people I did have to do some refactoring to the previous milestone to ensure it would work with this one (which took the first week). \textbf{To solve} this problem I looked had to ensure I understood what the input was (milestone 1) and understand what I needed the out put to become. Since I had already developed a tree I had to make sure that I understood what I was needing to do in the middle. This part was just a bunch of if statements but they were intertwined making some operations quite confusing leading me to draw it out on paper multiple time. \textbf{To test} this I started with one of the smallest accepted statements '( )' and then moved on to have a test case for each of the lines in the grammar. Overall I learned python more, as I know understand how to create structure like elements and I have successfully implemented a recursion. This ensured that we knew our recursive algorithms and verified we new how to work with a medium sized project. 
 \end{mdframed}
 
 
 
 \newpage
-\subsection{Source For scanner.py}
-\lstinputlisting[language=Python]{scanner.py}
+\section{Source Code}
+\subsection{main.py}
+\lstinputlisting[language=Python]{main.py}
+\subsection{node.py}
+\lstinputlisting[language=Python]{node.py}
+\subsection{defines.py}
+\lstinputlisting[language=Python]{defines.py}
+\subsection{myparser.py}
+\lstinputlisting[language=Python]{myparser.py}
+\subsection{lexer.py}
+\lstinputlisting[language=Python]{lexer.py}
 
 
 

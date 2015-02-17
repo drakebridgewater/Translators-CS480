@@ -61,7 +61,7 @@ clean:
 
 stutest.out:
 	echo 'Running stutest.in and storing int stutest.out'
-	python main.py test > stutest.out
+	python3 main.py test1 > stutest.out
 
 	
 ##=============================================================================
@@ -70,5 +70,5 @@ stutest.out:
 
 proftest.out:
 	echo 'Running proftest.in and storing in proftest.out'
-	python3.4 main.py proftest.in > proftest.out
+	python3 main.py proftest.in > proftest.out
 

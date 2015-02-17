@@ -3,6 +3,10 @@ __author__ = 'Drake'
 
 class Node(object):
     def __init__(self, data):
+        if hasattr(data, "value"):
+            print("New Node: " + str(data.value))
+        else:
+            print("NN Str: " + str(data))
         self.data = data
         self.children = []
         self.depth = 0
@@ -11,6 +15,7 @@ class Node(object):
         if obj is None:
             return obj
         self.children.append(obj)
+        return True
 
     # need to set depth recursively
     def set_depth(self, t):
@@ -48,7 +53,7 @@ class Node(object):
         return obj.depth
 
     def print_tree(self):
-        print("-" * 80 + "\n\t print tree called")
+        print("-" * 40 + "\n\t print tree called")
         # print(self.data)
         self.print_tree_helper(self)
 
@@ -58,6 +63,7 @@ class Node(object):
             # if child.get_child_count() > 0:
             # if child.data is not None:
             if isinstance(child, int):
+
                 print("\t" * indent + str(child))
             elif isinstance(child, str):
                 print("\t" * indent + str(child))
