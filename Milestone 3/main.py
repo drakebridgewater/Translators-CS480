@@ -11,16 +11,6 @@ Usage:
 """
 
 
-def prepare_files(argv):
-    for arg in argv:
-        if arg[0] == '-':
-            # collect user options
-            options.append(arg)
-        elif arg != argv[0]:
-            # collect files
-            files.append(arg)
-
-
 def read_file(input_file):
     content = ""
     f = open(input_file)
@@ -41,18 +31,13 @@ def print_verbose(selected_file, content):
 
 
 def main():
-    if len(sys.argv) < 2:
-        print(usage)
-        exit()
 
-    global options
-    global files
-    prepare_files(sys.argv)
-
-    filename = sys.argv[1]
-    for file in files:
-        parser = MyParser(filename)
-        parser.control()
+    if len(sys.argv) > 1:
+        filename = sys.argv[1]
+    else:
+        filename = "test1"
+    parser = MyParser(filename)
+    parser.control()
 
 
 if __name__ == '__main__':
