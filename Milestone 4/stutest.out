@@ -1,0 +1,46 @@
+New Node: root
+NN Str: []
+------------------------------
+NN Str: S
+New Node: (
+NN Str: S"
+NN Str: S
+NN Str: expr
+NN Str: oper
+NN Str: constant
+NN Str: string
+NN Str: int
+NN Str: S'
+NN Str: S
+NN Str: expr
+NN Str: oper
+NN Str: constant
+NN Str: string
+NN Str: int
+NN Str: float
+NN Str: name
+PARSE ERROR: [line: 1] missing left paren constant or name
+NN Str: stmts
+NN Str: ifstmts
+PARSE ERROR: [line: 1] missing left paren in if statment
+NN Str: whilestmts
+PARSE ERROR: [line: 1] missing left paren
+NN Str: letstmts
+PARSE ERROR: [line: 1] missing left paren
+NN Str: printstmts
+PARSE ERROR: [line: 1] missing left paren
+PARSE ERROR: [line: 1] missing if, while, let or print statment
+ERROR
+----------------------------------------
+	 print tree called
+	S
+		[line: 1, ID: ops, Value: (]
+		S"
+			S
+				expr
+					oper
+						constant
+							int
+								[line: 1, ID: int, Value: 1]
+				S'
+					S
