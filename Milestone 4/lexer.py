@@ -151,7 +151,6 @@ class Lexer():
             self.get_next_char()
             while self.current_char in accepted_chars:
                 word += self.current_char
-                # TODO if part of the token is in the token list what do we do??
                 self.get_next_char()
         token_value = word
         token_type = self.has_token(token_value)

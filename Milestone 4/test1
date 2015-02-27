@@ -1,4 +1,3 @@
-( abc int ) ( ksl bool ) ( abcd real )
-( abcf bool ) ( kslr bool ) ( abc int )
- ( ksl bool ) ( abcd real )
-( abcf bool ) ( kslr bool )
+( ( + 1 ( * ( + 2 3 ) 7 ) ) )
+( := name 52 )
+( + oper oper )
