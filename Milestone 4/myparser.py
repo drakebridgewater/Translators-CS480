@@ -139,7 +139,7 @@ class MyParser(object):
             # while 1:
             print("-" * 30)
             while self.current_state:
-                self.tree.add_child(self.type())
+                self.tree.add_child(self.varlist())
                 # globals()['current_token_index'] += 1
             self.tree.print_tree()
             if len(self.tokens) == 0:
@@ -156,7 +156,7 @@ class MyParser(object):
         if isinstance(token, int):
             return None
         if token.type == compare:
-            pass
+            globals()['current_token_index'] += 1
             return Node(token)
         else:
             return None
@@ -168,7 +168,7 @@ class MyParser(object):
         if token is None:
             return None
         if token.value == compare:
-            pass
+            globals()['current_token_index'] += 1
             return Node(token)
         else:
             return None
@@ -323,6 +323,32 @@ class MyParser(object):
         if not self.current_state:
             return None
         new_node = Node("varlist")
+        save = globals()["current_token_index"]
+        if new_node.add_child(self.is_value(self.get_token(), L_PAREN)):
+            type_save = globals()["current_token_index"]
+            if new_node.add_child(self.is_type(self.get_token(), TYPE_ID)):
+                if new_node.add_child(self.type()):
+                    rparen_save = globals()["current_token_index"]
+                    if new_node.add_child(self.is_value(self.get_token(), R_PAREN)):
+                        varlist_save = globals()["current_token_index"]
+                        if new_node.add_child(self.varlist()):
+                            # (name type) varlist
+                            return new_node
+                        else:
+                            globals()["current_token_index"] = varlist_save
+                        # (name type)
+                        return new_node
+                    else:
+                        globals()["current_token_index"] = save
+                else:
+                    pass
+                    # check of type failed
+            else:
+                globals()["current_token_index"] = save
+        else:
+            globals()["current_token_index"] = save
+            self.parse_error("not varlist")
+            return None
         return new_node
 
     def type(self):
@@ -332,16 +358,12 @@ class MyParser(object):
         new_node = Node("type")
         save = globals()["current_token_index"]
         if new_node.add_child(self.is_value(self.get_token(), "bool")):
-            globals()['current_token_index'] += 1
             pass
         elif new_node.add_child(self.is_value(self.get_token(), "int")):
-            globals()['current_token_index'] += 1
             pass
         elif new_node.add_child(self.is_value(self.get_token(), "real")):
-            globals()['current_token_index'] += 1
             pass
         elif new_node.add_child(self.is_value(self.get_token(), "string")):
-            globals()['current_token_index'] += 1
             pass
         else:
             globals()["current_token_index"] = save

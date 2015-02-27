@@ -37,6 +37,7 @@ def print_verbose(selected_file, content):
 
 
 def main():
+    sys.setrecursionlimit(100)
     if len(sys.argv) > 1:
         filename = sys.argv[1]
     else:
