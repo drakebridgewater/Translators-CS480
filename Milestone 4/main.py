@@ -1,7 +1,7 @@
 #!/usr/bin/python
 __author__ = 'Drake'
 import sys
-from defines import *
+
 from myparser import *
 
 
@@ -12,10 +12,12 @@ Usage:
 
 files = []
 options = []
-
+global DEBUG
+DEBUG = 1
 
 global current_token_index
 current_token_index = 0
+
 
 def read_file(input_file):
     content = ""
@@ -38,12 +40,16 @@ def print_verbose(selected_file, content):
 
 def main():
     sys.setrecursionlimit(100)
+    if '-d' in sys.argv:
+        globals()['DEBUG'] = 1
     if len(sys.argv) > 1:
-        filename = sys.argv[1]
+        filename = sys.argv[len(sys.argv) - 1]
     else:
         filename = "test1"
     parser = MyParser(filename)
     parser.control()
+    tree = parser.tree
+    tree.post_order_tree_print()
 
 
 if __name__ == '__main__':

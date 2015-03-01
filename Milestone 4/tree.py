@@ -76,18 +76,17 @@ class Tree():
         self.root.get_value()
         self.print_tree_helper(self.root)
 
-    def print_postordered_tree(self):
-        print("-" * 80 + "\n\t print post ordered tree called")
-        print
-        self.root.get_value()
-        self.post_order_tree_print(self.root)
-
     def print_tree_helper(self, node, indent=0):
         indent += 1
         for child in node.children:
             # if child.get_child_count() > 0:
             print("\t" * indent + child.get_value())
             self.print_tree_helper(child, indent)
+
+    def print_postordered_tree(self):
+        print("-" * 80 + "\n\t print post ordered tree called")
+        self.root.get_value()
+        self.post_order_tree_print(self.root)
 
     def post_order_tree_print(self, node):
         for child in node.children:

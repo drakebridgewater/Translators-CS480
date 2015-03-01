@@ -56,7 +56,6 @@ class Node(object):
             # if child.get_child_count() > 0:
             # if child.data is not None:
             if isinstance(child, int):
-
                 print("\t" * indent + str(child))
             elif isinstance(child, str):
                 print("\t" * indent + str(child))
@@ -79,6 +78,37 @@ class Node(object):
                 # else:
                 # print("Failed")
 
+    def print_postordered_tree(self):
+        print("-" * 80 + "\n\t print post ordered tree called")
+        self.post_order_tree_print(self)
+
+    def post_order_tree_print(self, node):
+        for child in node.children:
+            self.post_order_tree_print(child)
+            self.print_child(child)
+
+    def print_child(self, child):
+        if isinstance(child, int):
+            print("\t" * indent + str(child))
+        elif isinstance(child, str):
+            print("\t" * indent + str(child))
+        elif hasattr(child, "data"):
+            if hasattr(child.data, "value"):
+                print("\t" * indent + "[line: " + str(child.data.line) +
+                      ", ID: " + child.data.type +
+                      ", Value: " + str(child.data.value) + "]")
+            else:
+                print("\t" * indent + str(child.data))
+            self.print_tree_helper(child, indent)
+        elif hasattr(child, "value"):
+            print("\t" * indent + "[line: " + str(child.line) +
+                  ", ID: " + child.type +
+                  ", Value: " + str(child.value) + "]")
+        else:
+            print("Error in print_tree_helper")
+            print(child)
+            return False
+        return True
 
 class MyParser(object):
     def __init__(self, filename):
@@ -88,6 +118,7 @@ class MyParser(object):
         self.current_state = True
         self.tokens = []
         self.line = 0
+        self.epsilon_flag = 0
 
     def exit(self):
         self.tree.print_tree()
@@ -132,6 +163,10 @@ class MyParser(object):
                 self.tree.add_child(self.s())
                 # globals()['current_token_index'] += 1
                 self.tree.print_tree()
+                self.tree.print_postordered_tree()
+                if len(self.tokens) > globals()['current_token_index']:
+                    # if self.tokens[len(self.tokens) - 1] == -1:
+                    self.current_state = True  # Done reading file
             if len(self.tokens) == 0:
                 return None
         finally:
@@ -167,7 +202,9 @@ class MyParser(object):
         save = globals()["current_token_index"]
         if new_node.add_child(self.expr()):
             if new_node.add_child(self.s_prime()):
-                pass
+                if self.epsilon_flag:
+                    self.epsilon_flag = 0
+                    return new_node
             else:
                 globals()["current_token_index"] = save
         elif new_node.add_child(self.is_value(self.get_token(), L_PAREN)):
@@ -183,7 +220,7 @@ class MyParser(object):
         # if len(new_node.children) > 0:
         # return new_node
         # else:
-        #     return None
+        # return None
         return new_node
 
     def s_prime(self):
@@ -199,8 +236,10 @@ class MyParser(object):
                 globals()["current_token_index"] = save
         else:
             new_node.add_child("epsilon")
+            self.epsilon_flag = 1
             # TODO Need a double return here so that it get back to s and starts a new s
-            # self.current_state = False
+            self.current_state = False
+            return None
         return new_node
 
     def s_double_prime(self):

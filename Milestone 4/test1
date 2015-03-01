@@ -1,3 +1,1 @@
-( ( + 1 ( * ( + 2 3 ) 7 ) ) )
-( := name 52 )
-( + oper oper )
+( ( stdout ( + "hello " "world" ) ) )
