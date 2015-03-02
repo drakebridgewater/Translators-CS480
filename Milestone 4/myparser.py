@@ -125,8 +125,7 @@ class MyParser(object):
         exit()
 
     def parse_error(self, msg=''):
-        pass
-        # print("PARSE ERROR: [line: " + str(self.line) + "] " + msg)
+        print("PARSE ERROR: [line: " + str(self.line) + "] " + msg)
 
     # Function Description:
     # will return a single token as the lexer may spit out multiple
@@ -163,10 +162,9 @@ class MyParser(object):
                 self.tree.add_child(self.s())
                 # globals()['current_token_index'] += 1
                 self.tree.print_tree()
-                self.tree.print_postordered_tree()
-                if len(self.tokens) > globals()['current_token_index']:
+                if globals()['current_token_index'] > len(self.tokens):
                     # if self.tokens[len(self.tokens) - 1] == -1:
-                    self.current_state = True  # Done reading file
+                    self.current_state = False  # Done reading file
             if len(self.tokens) == 0:
                 return None
         finally:
@@ -207,6 +205,9 @@ class MyParser(object):
                     return new_node
             else:
                 globals()["current_token_index"] = save
+                if self.epsilon_flag:
+                    self.epsilon_flag = 0
+                    return new_node
         elif new_node.add_child(self.is_value(self.get_token(), L_PAREN)):
             if new_node.add_child(self.s_double_prime()):
                 pass
@@ -334,12 +335,16 @@ class MyParser(object):
                             return new_node
                         else:
                             globals()["current_token_index"] = l_paren_save
+                            return None
                     else:
                         globals()["current_token_index"] = l_paren_save
+                        return None
                 else:
                     globals()["current_token_index"] = l_paren_save
+                    return None
             else:
-                globals()["current_token_index"] = l_paren_save
+                globals()["current_token_index"] = save
+                return None
 
         elif new_node.add_child(self.constants()):
             pass
@@ -545,10 +550,13 @@ class MyParser(object):
                         pass
                     else:
                         globals()["current_token_index"] = save
+                        return None
                 else:
                     globals()["current_token_index"] = save
+                    return None
             else:
                 globals()["current_token_index"] = save
+                return None
         else:
             globals()["current_token_index"] = save
             self.parse_error("not an if statment")
@@ -569,12 +577,16 @@ class MyParser(object):
                             pass
                         else:
                             globals()["current_token_index"] = save
+                            return None
                     else:
                         globals()["current_token_index"] = save
+                        return None
                 else:
                     globals()["current_token_index"] = save
+                    return None
             else:
                 globals()["current_token_index"] = save
+                return None
         else:
             globals()["current_token_index"] = save
             self.parse_error("Not While stmts")
@@ -611,10 +623,13 @@ class MyParser(object):
                         pass
                     else:
                         globals()["current_token_index"] = save
+                        return None
                 else:
                     globals()["current_token_index"] = save
+                    return None
             else:
                 globals()["current_token_index"] = save
+                return None
         else:
             globals()["current_token_index"] = save
             self.parse_error("Checked if let statement")

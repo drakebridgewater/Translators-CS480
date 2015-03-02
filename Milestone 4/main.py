@@ -49,7 +49,7 @@ def main():
     parser = MyParser(filename)
     parser.control()
     tree = parser.tree
-    tree.post_order_tree_print()
+    tree.print_postordered_tree()
 
 
 if __name__ == '__main__':
