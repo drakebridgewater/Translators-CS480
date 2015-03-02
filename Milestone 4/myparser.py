@@ -66,7 +66,7 @@ class Node(object):
                           ", Value: " + str(child.data.value) + "]")
                 else:
                     print("\t" * indent + str(child.data))
-                self.print_tree_helper(child, indent)
+
             elif hasattr(child, "value"):
                 print("\t" * indent + "[line: " + str(child.line) +
                       ", ID: " + child.type +
@@ -85,7 +85,7 @@ class Node(object):
     def post_order_tree_print(self, node):
         for child in node.children:
             self.post_order_tree_print(child)
-            self.print_child(child)
+            self.print_child(child, 0)
 
     def print_child(self, child, indent):
         if isinstance(child, int):

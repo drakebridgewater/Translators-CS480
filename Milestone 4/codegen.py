@@ -16,8 +16,8 @@ class codeGen():
     def post_order_walkthrough(self, node):
         for child in node:
             self.next_tree_item = False
-            self.post_order_walkthrough(node)
-            self.do_something(node.data)
+            self.post_order_walkthrough(child)
+            self.do_something(child.data)
 
     def do_something(self, data):
         if self.next_tree_item:
