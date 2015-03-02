@@ -89,8 +89,8 @@
 \usepackage{hyperref}
 
 \def\name{Drake Bridgewater }
-\def\title{Milestone 3: IBTL Parser }
-\def\subtitle{Recursive Descent Parser}
+\def\title{Milestone 4: Constant Only Calculations }
+\def\subtitle{}
 \def\subject{CS }
 \def\courseNumber{352 }
 \def\courseName{TRANSLATORS }
@@ -190,6 +190,10 @@ The way I approached this problem was one paper with drawing out what how I woul
 \begin{mdframed}[style=MyFrame]
 Since a tree is just a single node with child nodes I created a node that would allow printing in a familiar format for easy readability 
 \end{mdframed}
+\subsection{codegen.py}
+\begin{mdframed}[style=MyFrame]
+This was created to take the tree that we created in the last assignment. With the tree we would walk through it, post-order, and then as we saw the elements we pushed them out to to file. This allowed the code to be rather simple. Once that was finished I converted the variable to gforth code and wrote that to another file.
+\end{mdframed}
 \subsection{defines.py}
 \begin{mdframed}[style=MyFrame]
 I decided to place all the global variable into a file for easy manipulation. This fill contains the token ID and also defines what a token is. 
@@ -212,7 +216,8 @@ The lexer of this assignment was to recognize the chars one at a time and take t
 %Retrospective (what did you learn in this milestone)
 
 \begin{mdframed}[style=MyFrame]
-\textbf{The purpose} of this mile stone was to ensure that we can store, retrieve and redistribute in such a way that the grammar is followed. This ensures that we understand the code that we are writing and verifies we understood what we needed to do. Like many people I did have to do some refactoring to the previous milestone to ensure it would work with this one (which took the first week). \textbf{To solve} this problem I looked had to ensure I understood what the input was (milestone 1) and understand what I needed the out put to become. Since I had already developed a tree I had to make sure that I understood what I was needing to do in the middle. This part was just a bunch of if statements but they were intertwined making some operations quite confusing leading me to draw it out on paper multiple time. \textbf{To test} this I started with one of the smallest accepted statements '( )' and then moved on to have a test case for each of the lines in the grammar. Overall I learned python more, as I know understand how to create structure like elements and I have successfully implemented a recursion. This ensured that we knew our recursive algorithms and verified we new how to work with a medium sized project. 
+This assignment was much easier then I thought it was going to be but \textbf{the purpose} of this assignment was to ensure that our tree was producing the correct output and that we understand tokens, trees and parsing. To approach this problem I need it to be simple therefore I took concepts that were taught early on, such as the post order tree traversal and the basic parsing, to produce gforth code. With a solid idea I was able to \textbf{solve} this problem mostly by a single if statement but then I need to do type checking to ensure that the values were coming in properly. During the entire process I was creating\textbf{ test} cases that would test the current function allowing me to get really good code coverage. 
+
 \end{mdframed}
 
 
@@ -221,6 +226,8 @@ The lexer of this assignment was to recognize the chars one at a time and take t
 \section{Source Code}
 \subsection{main.py}
 \lstinputlisting[language=Python]{main.py}
+\subsection{codegen.py}
+\lstinputlisting[language=Python]{codegen.py}
 \subsection{node.py}
 \lstinputlisting[language=Python]{node.py}
 \subsection{defines.py}

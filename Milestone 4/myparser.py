@@ -87,7 +87,7 @@ class Node(object):
             self.post_order_tree_print(child)
             self.print_child(child)
 
-    def print_child(self, child):
+    def print_child(self, child, indent):
         if isinstance(child, int):
             print("\t" * indent + str(child))
         elif isinstance(child, str):
@@ -99,7 +99,6 @@ class Node(object):
                       ", Value: " + str(child.data.value) + "]")
             else:
                 print("\t" * indent + str(child.data))
-            self.print_tree_helper(child, indent)
         elif hasattr(child, "value"):
             print("\t" * indent + "[line: " + str(child.line) +
                   ", ID: " + child.type +
@@ -109,6 +108,7 @@ class Node(object):
             print(child)
             return False
         return True
+
 
 class MyParser(object):
     def __init__(self, filename):

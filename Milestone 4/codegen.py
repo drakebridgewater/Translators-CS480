@@ -52,8 +52,37 @@ class codeGen():
     # Function Description:
     # Only write out if data is actually data
     def write_out(self, data):
-        if data:
+        if data.value is KEYWORD_STDOUT:
+            print('.s')
+        elif data.value is KEYWORD_STDOUT:
+            print('.s')
+        elif data.value is OPER_EQ:
+            pass
+        elif data.value is OPER_ASSIGN:
+            pass
+        elif data.value is OPER_ADD:
+            pass
+        elif data.value is OPER_SUB:
+            pass
+        elif data.value is OPER_DIV:
+            pass
+        elif data.value is OPER_MULT:
+            pass
+        elif data.value is OPER_LT:
+            pass
+        elif data.value is OPER_GT:
+            pass
+        elif data.value is OPER_LE:
+            pass
+        elif data.value is OPER_GE:
+            pass
+        elif data.value is OPER_NE:
+            pass
+        elif data.value is OPER_NOT:
+            pass
             print(data)
+        else:
+            pass
 
     def compare(self, value1, value2):
         pass
