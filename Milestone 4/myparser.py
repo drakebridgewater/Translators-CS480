@@ -283,6 +283,7 @@ class MyParser(object):
         return new_node
 
     def oper(self):
+        global current_token_index
         if not self.current_state:
             return None
         # oper ->   ( := name oper )
@@ -291,59 +292,43 @@ class MyParser(object):
         # constants
         # name
         new_node = Node("oper")
-        save = globals()["current_token_index"]
+        saved_token_index = current_token_index
         if new_node.add_child(self.is_value(self.get_token(), L_PAREN)):
-            l_paren_save = globals()["current_token_index"]
+            l_paren_save = current_token_index
             temp_node = new_node
-            if temp_node.add_child(self.is_value(self.get_token(), OPER_ASSIGN)):
-                if temp_node.add_child(self.is_type(self.get_token(), TYPE_ID)):
-                    if temp_node.add_child(self.oper()):
-                        if temp_node.add_child(self.is_value(self.get_token(), R_PAREN)):
-                            new_node = temp_node
-                            return new_node
-                        else:
-                            globals()["current_token_index"] = l_paren_save
-                    else:
-                        globals()["current_token_index"] = l_paren_save
-                else:
-                    globals()["current_token_index"] = l_paren_save
+            if (temp_node.add_child(self.is_value(self.get_token(), OPER_ASSIGN))
+                and temp_node.add_child(self.is_type(self.get_token(), TYPE_ID))
+                and temp_node.add_child(self.oper())
+                and temp_node.add_child(self.is_value(self.get_token(), R_PAREN))):
+
+                new_node = temp_node
+                return new_node
+
             else:
-                globals()["current_token_index"] = l_paren_save
+                current_token_index = l_paren_save
 
             temp_node = new_node
-            if temp_node.add_child(self.binops()):
-                if temp_node.add_child(self.oper()):
-                    if temp_node.add_child(self.oper()):
-                        if temp_node.add_child(self.is_value(self.get_token(), R_PAREN)):
-                            new_node = temp_node
-                            return new_node
-                        else:
-                            globals()["current_token_index"] = l_paren_save
-                    else:
-                        globals()["current_token_index"] = l_paren_save
-                else:
-                    globals()["current_token_index"] = l_paren_save
+            if (temp_node.add_child(self.binops())
+                and temp_node.add_child(self.oper())
+                and temp_node.add_child(self.oper())
+                and temp_node.add_child(self.is_value(self.get_token(), R_PAREN))):
+
+                new_node = temp_node
+                return new_node
+
             else:
-                globals()["current_token_index"] = l_paren_save
+                current_token_index = l_paren_save
 
             temp_node = new_node
-            if temp_node.add_child(self.unops()):
-                if temp_node.add_child(self.oper()):
-                    if temp_node.add_child(self.is_value(self.get_token(), R_PAREN)):
-                        if temp_node.add_child(self.tokens[0]):
-                            new_node = temp_node
-                            return new_node
-                        else:
-                            globals()["current_token_index"] = l_paren_save
-                            return None
-                    else:
-                        globals()["current_token_index"] = l_paren_save
-                        return None
-                else:
-                    globals()["current_token_index"] = l_paren_save
-                    return None
+            if (temp_node.add_child(self.unops())
+            and temp_node.add_child(self.oper())
+            and temp_node.add_child(self.is_value(self.get_token(), R_PAREN))
+            and temp_node.add_child(self.tokens[0])):
+                new_node = temp_node
+                return new_node
+
             else:
-                globals()["current_token_index"] = save
+                current_token_index = saved_token_index
                 return None
 
         elif new_node.add_child(self.constants()):
@@ -352,7 +337,7 @@ class MyParser(object):
             pass
         else:
             self.parse_error("missing left paren constant or name")
-            globals()["current_token_index"] = save
+            current_token_index = saved_token_index
             return None
         return new_node
 
