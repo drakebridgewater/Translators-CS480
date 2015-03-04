@@ -158,13 +158,13 @@ class MyParser(object):
         try:
             self.lexer.open_file()
             print("-" * 30)
-            while self.current_state:
-                self.tree.add_child(self.s())
-                # globals()['current_token_index'] += 1
-                self.tree.print_tree()
-                if globals()['current_token_index'] > len(self.tokens):
-                    # if self.tokens[len(self.tokens) - 1] == -1:
-                    self.current_state = False  # Done reading file
+            #while self.current_state:
+            self.tree.add_child(self.s())
+            # globals()['current_token_index'] += 1
+            self.tree.print_tree()
+            if globals()['current_token_index'] > len(self.tokens):
+                # if self.tokens[len(self.tokens) - 1] == -1:
+                self.current_state = False  # Done reading file
             if len(self.tokens) == 0:
                 return None
         finally:
@@ -193,76 +193,40 @@ class MyParser(object):
             return None
 
     def s(self):
-        if not self.current_state:
-            return None
-        # s -> expr S' | ( S"
+        # S --> [S' | Oper3 S | Oper3
         new_node = Node("S")
         save = globals()["current_token_index"]
-        if new_node.add_child(self.expr()):
-            if new_node.add_child(self.s_prime()):
-                if self.epsilon_flag:
-                    self.epsilon_flag = 0
-                    return new_node
-            else:
-                globals()["current_token_index"] = save
-                if self.epsilon_flag:
-                    self.epsilon_flag = 0
-                    return new_node
-        elif new_node.add_child(self.is_value(self.get_token(), L_PAREN)):
-            if new_node.add_child(self.s_double_prime()):
-                pass
-            else:
-                globals()["current_token_index"] = save
+        if new_node.add_child(self.is_value(self.get_token(), L_PAREN)) \
+                and new_node.add_child(self.s_prime()):
+            pass
+        elif new_node.add_child(self.oper()) \
+                and new_node.add_child(self.s()):
+            pass
+        elif new_node.add_child(self.oper()):
+            pass
         else:
+            self.parse_error("could not find grammar in s")
             globals()["current_token_index"] = save
-            print("ERROR")
-            self.current_state = True
             return None
-        # if len(new_node.children) > 0:
-        # return new_node
-        # else:
-        # return None
         return new_node
 
     def s_prime(self):
-        if not self.current_state:
-            return None
-        # s' -> S S' | epsilon
-        new_node = Node("S'")
-        save = globals()["current_token_index"]
-        if new_node.add_child(self.s()):
-            if new_node.add_child(self.s_prime()):
-                pass
-            else:
-                globals()["current_token_index"] = save
-        else:
-            new_node.add_child("epsilon")
-            self.epsilon_flag = 1
-            # TODO Need a double return here so that it get back to s and starts a new s
-            self.current_state = False
-            return None
-        return new_node
-
-    def s_double_prime(self):
-        if not self.current_state:
-            return None
-        # S" ->  )S' | S)S'
-        new_node = Node('S"')
+        # S' --> ] | S] | Expr2] | ]S
+        new_node = Node("S")
         save = globals()["current_token_index"]
         if new_node.add_child(self.is_value(self.get_token(), R_PAREN)):
-            if new_node.add_child((self.s_prime())):
-                pass
-            else:
-                globals()["current_token_index"] = save
-        elif new_node.add_child((self.s())):
-            if new_node.add_child(self.is_value(self.get_token(), R_PAREN)):
-                if new_node.add_child(self.s_prime()):
-                    pass
-                else:
-                    globals()["current_token_index"] = save
-            else:
-                globals()["current_token_index"] = save
+            pass
+        elif new_node.add_child(self.s()) \
+                and new_node.add_child(self.is_value(self.get_token(), R_PAREN)):
+            pass
+        elif new_node.add_child(self.expr2()) \
+                and new_node.add_child(self.is_value(self.get_token(), R_PAREN)):
+            pass
+        elif new_node.add_child(self.is_value(self.get_token(), R_PAREN)) \
+                and new_node.add_child(self.s()):
+            pass
         else:
+            self.parse_error("could not find grammar in s")
             globals()["current_token_index"] = save
             return None
         return new_node
@@ -270,12 +234,29 @@ class MyParser(object):
     def expr(self):
         if not self.current_state:
             return None
-        # expr -> oper | stmts
+        # Expr --> [Expr2] | Oper3
         new_node = Node("expr")
         save = globals()["current_token_index"]
-        if new_node.add_child(self.oper()):
+        if new_node.add_child(self.is_value(self.get_token(), L_PAREN)) \
+                and new_node.add_child(self.expr2()) \
+                and new_node.add_child(self.is_value(self.get_token(), R_PAREN)):
             pass
-        elif new_node.add_child((self.stmts())):
+        elif new_node.add_child(self.oper3()):
+            pass
+        else:
+            globals()["current_token_index"] = save
+            return None
+        return new_node
+
+    def expr2(self):
+        if not self.current_state:
+            return None
+        # expr2 --> Stmt | Oper2
+        new_node = Node("expr3")
+        save = globals()["current_token_index"]
+        if new_node.add_child(self.stmts()):
+            pass
+        elif new_node.add_child((self.oper2())):
             pass
         else:
             globals()["current_token_index"] = save
@@ -283,55 +264,62 @@ class MyParser(object):
         return new_node
 
     def oper(self):
+        # Oper --> [Oper2] | Oper3
         global current_token_index
         if not self.current_state:
             return None
-        # oper ->   ( := name oper )
-        # ( binops oper oper )
-        # ( unops oper )
-        # constants
-        # name
+
         new_node = Node("oper")
         saved_token_index = current_token_index
-        if new_node.add_child(self.is_value(self.get_token(), L_PAREN)):
-            l_paren_save = current_token_index
-            temp_node = new_node
-            if (temp_node.add_child(self.is_value(self.get_token(), OPER_ASSIGN))
-                and temp_node.add_child(self.is_type(self.get_token(), TYPE_ID))
-                and temp_node.add_child(self.oper())
-                and temp_node.add_child(self.is_value(self.get_token(), R_PAREN))):
+        if new_node.add_child(self.is_value(self.get_token(), L_PAREN)) \
+                and new_node.add_child(self.oper2()) \
+                and new_node.add_child(self.is_value(self.get_token(), R_PAREN)):
+            pass
+        else:
+            self.parse_error("missing oper constant or name")
+            current_token_index = saved_token_index
+            return None
+        return new_node
 
-                new_node = temp_node
-                return new_node
+    def oper2(self):
+        # Oper2 --> := Name Oper
+        # | Binop Oper Oper
+        # | Unop Oper
+        global current_token_index
+        if not self.current_state:
+            return None
 
-            else:
-                current_token_index = l_paren_save
+        new_node = Node("oper2")
+        saved_token_index = current_token_index
+        if new_node.add_child(self.is_value(self.get_token(), OPER_ASSIGN)) \
+                and new_node.add_child(self.is_type(self.get_token(), TYPE_ID)) \
+                and new_node.add_child(self.oper()) \
+                and new_node.add_child(self.is_value(self.get_token(), R_PAREN)):
+            pass
+        if new_node.add_child(self.binops()) \
+                and new_node.add_child(self.oper()) \
+                and new_node.add_child(self.oper()) \
+                and new_node.add_child(self.is_value(self.get_token(), R_PAREN)):
+            pass
+        if new_node.add_child(self.unops()) \
+                and new_node.add_child(self.oper()) \
+                and new_node.add_child(self.is_value(self.get_token(), R_PAREN)) \
+                and new_node.add_child(self.tokens[0]):
+            pass
+        else:
+            self.parse_error("missing oper2 constant or name")
+            current_token_index = saved_token_index
+            return None
+        return new_node
 
-            temp_node = new_node
-            if (temp_node.add_child(self.binops())
-                and temp_node.add_child(self.oper())
-                and temp_node.add_child(self.oper())
-                and temp_node.add_child(self.is_value(self.get_token(), R_PAREN))):
-
-                new_node = temp_node
-                return new_node
-
-            else:
-                current_token_index = l_paren_save
-
-            temp_node = new_node
-            if (temp_node.add_child(self.unops())
-            and temp_node.add_child(self.oper())
-            and temp_node.add_child(self.is_value(self.get_token(), R_PAREN))
-            and temp_node.add_child(self.tokens[0])):
-                new_node = temp_node
-                return new_node
-
-            else:
-                current_token_index = saved_token_index
-                return None
-
-        elif new_node.add_child(self.constants()):
+    def oper3(self):
+        # Oper3 --> Constant | Name
+        global current_token_index
+        if not self.current_state:
+            return None
+        new_node = Node("oper3")
+        saved_token_index = current_token_index
+        if new_node.add_child(self.constants()):
             pass
         elif new_node.add_child(self.name()):
             pass
@@ -545,6 +533,23 @@ class MyParser(object):
         else:
             globals()["current_token_index"] = save
             self.parse_error("not an if statment")
+            return None
+        return new_node
+
+    def ifstmts2(self):
+        # ifstmts2 --> Expr | Expr Expr
+        if not self.current_state:
+            return None
+        new_node = Node("ifstmts2")
+        save = globals()["current_token_index"]
+        if new_node.add_child(self.expr()):
+            temp_save = globals()['current_token_index']
+            if new_node.add_child(self.expr()):
+                pass
+            else:
+                globals()["current_token_index"] = temp_save
+                self.parse_error("not an if2 statment")
+        else:
             return None
         return new_node
 
