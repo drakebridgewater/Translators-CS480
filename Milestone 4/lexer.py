@@ -66,8 +66,7 @@ class Lexer():
             elif self.is_digit():
                 return self.is_number()  # identify the number and add to the token list
             elif self.current_char == '"':
-                return self.create_token(("ops", '"'))
-                # self.parse_string()                 # parse a string
+                return self.create_token(self.parse_string())
             else:
                 print("Line:ERROR: Could not identify on line: " + str(
                     self.line) + " near char: '" + self.current_char + "'")
@@ -136,10 +135,10 @@ class Lexer():
         accepted_chars = ['"']
         new_string = ''
         self.get_next_char()
-        while self.current_char in accepted_chars:
+        while self.current_char not in accepted_chars:
             new_string += self.current_char
             self.get_next_char()
-        self.token_list.append(("string", new_string))
+        return "string", new_string
 
     def identify_word(self):
         accepted_chars = list(string.ascii_letters) + list(string.digits) + list('_')

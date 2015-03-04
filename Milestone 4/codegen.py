@@ -2,26 +2,26 @@ __author__ = 'drakebridgewater'
 from defines import *
 
 
-class codeGen():
-    def __int__(self, tree):
+class CodeGen(object):
+    def __init__(self, tree):
         self.tree = tree
         self.current_token = None
         self.stack = []
         self.next_tree_item = False
+        self.index = 0
 
     def control(self):
         # TODO as we step through the tree convert and push element on to stack
+        self.get_tokens_stack()
+        self.print_stack()
+        while self.index < len(self.stack):
+            self.do_something(self.stack[self.index])
         pass
 
-    def post_order_walkthrough(self, node):
-        for child in node:
-            self.next_tree_item = False
-            self.post_order_walkthrough(child)
-            self.do_something(child.data)
+    def out(self, msg):
+        print(msg)
 
     def do_something(self, data):
-        if self.next_tree_item:
-            return
         num_ops = self.oper_count(data)
         if num_ops == 1:
             if self.is_number(data):
@@ -53,35 +53,35 @@ class codeGen():
     # Only write out if data is actually data
     def write_out(self, data):
         if data.value is KEYWORD_STDOUT:
-            print('.s')
+            self.out('.s')
         elif data.value is KEYWORD_STDOUT:
-            print('.s')
+            self.out('.s')
         elif data.value is OPER_EQ:
-            pass
+            self.out(OPER_EQ)
         elif data.value is OPER_ASSIGN:
-            pass
+            self.out(OPER_ASSIGN)
         elif data.value is OPER_ADD:
-            pass
+            self.out(OPER_ADD)
         elif data.value is OPER_SUB:
-            pass
-        elif data.value is OPER_DIV:
-            pass
+            self.out(OPER_SUB)
+        elif data.value is OPER_SUB:
+            self.out(OPER_SUB)
         elif data.value is OPER_MULT:
-            pass
+            self.out(OPER_MULT)
         elif data.value is OPER_LT:
-            pass
+            self.out(OPER_LT)
         elif data.value is OPER_GT:
-            pass
+            self.out(OPER_GT)
         elif data.value is OPER_LE:
-            pass
+            self.out(OPER_LE)
         elif data.value is OPER_GE:
-            pass
+            self.out(OPER_GE)
         elif data.value is OPER_NE:
-            pass
+            self.out(OPER_NE)
         elif data.value is OPER_NOT:
-            pass
-            print(data)
+            self.out(OPER_NOT)
         else:
+            print_error("Attempting to write out", error_type="codegen")
             pass
 
     def compare(self, value1, value2):
@@ -92,3 +92,39 @@ class codeGen():
             self.next_tree_item = True
             return value1
         return False
+
+    def get_tokens_stack(self):
+        self._get_token_stack(self.tree)
+
+    def _get_token_stack(self, node):
+        for child in node.children:
+            self._get_token_stack(child)
+            temp_token = self.is_token(child)
+            if temp_token:
+                self.stack.append(temp_token)
+
+    def is_token(self, child):
+        if isinstance(child, int):
+            return None
+        elif isinstance(child, str):
+            return None
+        elif hasattr(child, "data"):
+            if hasattr(child.data, "value"):
+                return child.data
+            else:
+                return None
+        elif hasattr(child, "value"):
+            return child
+        else:
+            return None
+
+    def print_stack(self):
+        print_title("print tree called")
+        for token in self.stack:
+            print_token(token)
+
+    def post_order_walkthrough(self, node):
+        for child in node:
+            self.next_tree_item = False
+            self.post_order_walkthrough(child)
+            self.do_something(child.data)

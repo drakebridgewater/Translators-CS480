@@ -45,10 +45,9 @@ class Node(object):
         return obj.depth
 
     def print_tree(self):
-        print("-" * 40 + "\n\t print tree called")
+        print_title("print tree")
         # print(self.data)
         self.print_tree_helper(self)
-        print("-" * 40)
 
     def print_tree_helper(self, node, indent=0):
         indent += 1
@@ -61,16 +60,12 @@ class Node(object):
                 print("\t" * indent + str(child))
             elif hasattr(child, "data"):
                 if hasattr(child.data, "value"):
-                    print("\t" * indent + "[line: " + str(child.data.line) +
-                          ", ID: " + child.data.type +
-                          ", Value: " + str(child.data.value) + "]")
+                    print_token(child.data, indent)
                 else:
                     print("\t" * indent + str(child.data))
-
+                self.print_tree_helper(child, indent)
             elif hasattr(child, "value"):
-                print("\t" * indent + "[line: " + str(child.line) +
-                      ", ID: " + child.type +
-                      ", Value: " + str(child.value) + "]")
+                    print_token(child.data, indent)
             else:
                 print("Error in print_tree_helper")
                 print(child)
@@ -79,7 +74,7 @@ class Node(object):
                 # print("Failed")
 
     def print_postordered_tree(self):
-        print("-" * 80 + "\n\t print post ordered tree called")
+        print_title("post ordered tree ")
         self.post_order_tree_print(self)
 
     def post_order_tree_print(self, node):
@@ -94,15 +89,11 @@ class Node(object):
             print("\t" * indent + str(child))
         elif hasattr(child, "data"):
             if hasattr(child.data, "value"):
-                print("\t" * indent + "[line: " + str(child.data.line) +
-                      ", ID: " + child.data.type +
-                      ", Value: " + str(child.data.value) + "]")
+                print_token(child.data)
             else:
                 print("\t" * indent + str(child.data))
         elif hasattr(child, "value"):
-            print("\t" * indent + "[line: " + str(child.line) +
-                  ", ID: " + child.type +
-                  ", Value: " + str(child.value) + "]")
+            print_token(child)
         else:
             print("Error in print_tree_helper")
             print(child)
@@ -120,14 +111,15 @@ class MyParser(object):
         self.line = 0
         self.epsilon_flag = 0
 
-    def exit(self):
-        self.tree.print_tree()
-        exit()
+    # def exit(self):
+    #     self.tree.print_tree()
+    #     exit()
 
     def parse_error(self, msg=''):
-        print("PARSE ERROR: [line: " + str(self.line) + "] " + msg)
+        print_error(msg, self.line, "parse")
 
     # Function Description:
+    # will return a single token as the lexer may spit out multiple
     # will return a single token as the lexer may spit out multiple
     def get_token(self):
         # if not self.tokens:
@@ -148,17 +140,15 @@ class MyParser(object):
         try:
             self.lexer.open_file()
             while self.get_token():
-                print("[line: " + str(self.tokens.line) +
-                      ", ID: " + self.tokens.type +
-                      ", Value: " + str(self.tokens.value) + "]")
+                print_token(self.tokens)
         finally:
             self.lexer.close_file()
 
     def control(self):
         try:
             self.lexer.open_file()
-            print("-" * 30)
-            #while self.current_state:
+            print_title("lexer output")
+            # while self.current_state:
             self.tree.add_child(self.s())
             # globals()['current_token_index'] += 1
             self.tree.print_tree()
@@ -272,8 +262,9 @@ class MyParser(object):
         new_node = Node("oper")
         saved_token_index = current_token_index
         if new_node.add_child(self.is_value(self.get_token(), L_PAREN)) \
-                and new_node.add_child(self.oper2()) \
-                and new_node.add_child(self.is_value(self.get_token(), R_PAREN)):
+                and new_node.add_child(self.oper2()):
+            pass
+        elif new_node.add_child(self.oper3()):
             pass
         else:
             self.parse_error("missing oper constant or name")
@@ -293,18 +284,14 @@ class MyParser(object):
         saved_token_index = current_token_index
         if new_node.add_child(self.is_value(self.get_token(), OPER_ASSIGN)) \
                 and new_node.add_child(self.is_type(self.get_token(), TYPE_ID)) \
-                and new_node.add_child(self.oper()) \
-                and new_node.add_child(self.is_value(self.get_token(), R_PAREN)):
+                and new_node.add_child(self.oper()):
             pass
-        if new_node.add_child(self.binops()) \
+        elif new_node.add_child(self.binops()) \
                 and new_node.add_child(self.oper()) \
-                and new_node.add_child(self.oper()) \
-                and new_node.add_child(self.is_value(self.get_token(), R_PAREN)):
+                and new_node.add_child(self.oper()):
             pass
-        if new_node.add_child(self.unops()) \
-                and new_node.add_child(self.oper()) \
-                and new_node.add_child(self.is_value(self.get_token(), R_PAREN)) \
-                and new_node.add_child(self.tokens[0]):
+        elif new_node.add_child(self.unops()) \
+                and new_node.add_child(self.oper()):
             pass
         else:
             self.parse_error("missing oper2 constant or name")
@@ -489,20 +476,13 @@ class MyParser(object):
             return None
         new_node = Node("printstmts")
         save = globals()["current_token_index"]
-        if new_node.add_child(self.is_value(self.get_token(), L_PAREN)):
-            if new_node.add_child(self.is_value(self.get_token(), KEYWORD_STDOUT)):
-                if new_node.add_child(self.oper()):
-                    if new_node.add_child(self.is_value(self.get_token(), R_PAREN)):
-                        pass
-                    else:
-                        globals()["current_token_index"] = save
-                else:
-                    globals()["current_token_index"] = save
-            else:
-                globals()["current_token_index"] = save
+        if new_node.add_child(self.is_value(self.get_token(), KEYWORD_STDOUT)) \
+                and new_node.add_child(self.oper()) \
+                and new_node.add_child(self.is_value(self.get_token(), R_PAREN)):
+            pass
         else:
             globals()["current_token_index"] = save
-            self.parse_error("missing left paren")
+            self.parse_error("missing print statement paren")
             return None
         return new_node
 
