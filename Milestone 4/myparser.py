@@ -5,10 +5,10 @@ from defines import *
 
 class Node(object):
     def __init__(self, data):
-        if hasattr(data, "value"):
-            print("New Node: " + str(data.value))
-        else:
-            print("NN Str: " + str(data))
+        # if hasattr(data, "value"):
+        # print("New Node: " + str(data.value))
+        # else:
+        # print("NN Str: " + str(data))
         self.data = data
         self.children = []
         self.depth = 0
@@ -108,7 +108,7 @@ class MyParser(object):
         self.lexer = Lexer(filename)
         self.current_state = True
         self.tokens = []
-        self.line = 0
+        self.line = 1
         self.epsilon_flag = 0
 
     # def exit(self):
@@ -149,7 +149,7 @@ class MyParser(object):
             self.lexer.open_file()
             print_title("lexer output")
             # while self.current_state:
-            self.tree.add_child(self.s())
+            self.tree.add_child(self.t())
             # globals()['current_token_index'] += 1
             self.tree.print_tree()
             if globals()['current_token_index'] > len(self.tokens):
@@ -182,18 +182,33 @@ class MyParser(object):
         else:
             return None
 
+    def t(self):
+        # T --> (T)
+        new_node = Node("T")
+        save = globals()["current_token_index"]
+        if new_node.add_child(self.is_value(self.get_token(), L_PAREN)):
+            while new_node.add_child(self.s()):
+                pass
+            if new_node.add_child(self.is_value(self.get_token(), R_PAREN)):
+                pass
+        else:
+            self.parse_error("could not find grammar in T")
+            globals()["current_token_index"] = save
+            return None
+        return new_node
+
     def s(self):
         # S --> [S' | Oper3 S | Oper3
         new_node = Node("S")
         save = globals()["current_token_index"]
         if new_node.add_child(self.is_value(self.get_token(), L_PAREN)) \
                 and new_node.add_child(self.s_prime()):
-            pass
+            print("FOUND: (S' ")
         elif new_node.add_child(self.oper()) \
                 and new_node.add_child(self.s()):
-            pass
+            print("FOUND: oper3 S")
         elif new_node.add_child(self.oper()):
-            pass
+            print("FOUND oper3")
         else:
             self.parse_error("could not find grammar in s")
             globals()["current_token_index"] = save
@@ -205,19 +220,20 @@ class MyParser(object):
         new_node = Node("S")
         save = globals()["current_token_index"]
         if new_node.add_child(self.is_value(self.get_token(), R_PAREN)):
-            pass
+            print("FOUND: )")
         elif new_node.add_child(self.s()) \
                 and new_node.add_child(self.is_value(self.get_token(), R_PAREN)):
-            pass
+            print("FOUND: S )")
         elif new_node.add_child(self.expr2()) \
                 and new_node.add_child(self.is_value(self.get_token(), R_PAREN)):
-            pass
+            print("FOUND: expr2 )")
         elif new_node.add_child(self.is_value(self.get_token(), R_PAREN)) \
                 and new_node.add_child(self.s()):
-            pass
+            print("FOUND: ) S")
         else:
             self.parse_error("could not find grammar in s")
             globals()["current_token_index"] = save
+            new_node.print_tree()
             return None
         return new_node
 
@@ -230,9 +246,9 @@ class MyParser(object):
         if new_node.add_child(self.is_value(self.get_token(), L_PAREN)) \
                 and new_node.add_child(self.expr2()) \
                 and new_node.add_child(self.is_value(self.get_token(), R_PAREN)):
-            pass
+            print("FOUND: ( expr2 )")
         elif new_node.add_child(self.oper3()):
-            pass
+            print("FOUND: oper3")
         else:
             globals()["current_token_index"] = save
             return None
@@ -245,9 +261,9 @@ class MyParser(object):
         new_node = Node("expr3")
         save = globals()["current_token_index"]
         if new_node.add_child(self.stmts()):
-            pass
+            print("FOUND: stmts")
         elif new_node.add_child((self.oper2())):
-            pass
+            print("FOUND: oper2")
         else:
             globals()["current_token_index"] = save
             return None
@@ -262,13 +278,15 @@ class MyParser(object):
         new_node = Node("oper")
         saved_token_index = current_token_index
         if new_node.add_child(self.is_value(self.get_token(), L_PAREN)) \
-                and new_node.add_child(self.oper2()):
-            pass
+                and new_node.add_child(self.oper2()) \
+                and new_node.add_child(self.is_value(self.get_token(), R_PAREN)):
+            print("FOUND: (oper2)")
         elif new_node.add_child(self.oper3()):
-            pass
+            print("FOUND: oper3")
         else:
             self.parse_error("missing oper constant or name")
             current_token_index = saved_token_index
+            new_node.print_tree()
             return None
         return new_node
 
@@ -285,14 +303,14 @@ class MyParser(object):
         if new_node.add_child(self.is_value(self.get_token(), OPER_ASSIGN)) \
                 and new_node.add_child(self.is_type(self.get_token(), TYPE_ID)) \
                 and new_node.add_child(self.oper()):
-            pass
+            print("FOUND: := Name Oper")
         elif new_node.add_child(self.binops()) \
                 and new_node.add_child(self.oper()) \
                 and new_node.add_child(self.oper()):
-            pass
+            print("FOUND: Binop Oper Oper")
         elif new_node.add_child(self.unops()) \
                 and new_node.add_child(self.oper()):
-            pass
+            print("FOUND: Unop Oper")
         else:
             self.parse_error("missing oper2 constant or name")
             current_token_index = saved_token_index
@@ -307,9 +325,9 @@ class MyParser(object):
         new_node = Node("oper3")
         saved_token_index = current_token_index
         if new_node.add_child(self.constants()):
-            pass
+            print("FOUND: constants")
         elif new_node.add_child(self.name()):
-            pass
+            print("FOUND: name")
         else:
             self.parse_error("missing left paren constant or name")
             current_token_index = saved_token_index
@@ -457,13 +475,13 @@ class MyParser(object):
         new_node = Node("stmts")
         save = globals()["current_token_index"]
         if new_node.add_child(self.ifstmts()):
-            pass
+            print("FOUND: ifstmts")
         elif new_node.add_child(self.whilestmts()):
-            pass
+            print("FOUND: whilestmts")
         elif new_node.add_child(self.letstmts()):
-            pass
+            print("FOUND: letstmts")
         elif new_node.add_child(self.printstmts()):
-            pass
+            print("FOUND: printstmts")
         else:
             self.parse_error("missing if, while, let or print statment")
             globals()["current_token_index"] = save
@@ -477,9 +495,8 @@ class MyParser(object):
         new_node = Node("printstmts")
         save = globals()["current_token_index"]
         if new_node.add_child(self.is_value(self.get_token(), KEYWORD_STDOUT)) \
-                and new_node.add_child(self.oper()) \
-                and new_node.add_child(self.is_value(self.get_token(), R_PAREN)):
-            pass
+                and new_node.add_child(self.oper()):
+            print("FOUND: stdout oper")
         else:
             globals()["current_token_index"] = save
             self.parse_error("missing print statement paren")
@@ -487,29 +504,15 @@ class MyParser(object):
         return new_node
 
     def ifstmts(self):
-        # ifstmts -> (if expr expr expr) | (if expr expr)
+        # ifstmts -> if Expr If2
         if not self.current_state:
             return None
         new_node = Node("ifstmts")
         save = globals()["current_token_index"]
-        if new_node.add_child(self.is_value(self.get_token(), L_PAREN)):
-            if new_node.add_child(self.expr()):
-                if new_node.add_child(self.is_value(self.get_token(), R_PAREN)):
-                    # (if expr expr)
-                    pass
-                elif new_node.add_child(self.expr()):
-                    if new_node.add_child(self.is_value(self.get_token(), R_PAREN)):
-                        # (if expr expr expr)
-                        pass
-                    else:
-                        globals()["current_token_index"] = save
-                        return None
-                else:
-                    globals()["current_token_index"] = save
-                    return None
-            else:
-                globals()["current_token_index"] = save
-                return None
+        if new_node.add_child(self.is_value(self.get_token(), KEYWORD_IF)) \
+                and new_node.add_child(self.expr()) \
+                and new_node.add_child(self.ifstmts2()):
+            print("FOUND: if expr if2")
         else:
             globals()["current_token_index"] = save
             self.parse_error("not an if statment")
@@ -523,13 +526,10 @@ class MyParser(object):
         new_node = Node("ifstmts2")
         save = globals()["current_token_index"]
         if new_node.add_child(self.expr()):
-            temp_save = globals()['current_token_index']
             if new_node.add_child(self.expr()):
                 pass
-            else:
-                globals()["current_token_index"] = temp_save
-                self.parse_error("not an if2 statment")
         else:
+            globals()["current_token_index"] = save
             return None
         return new_node
 
@@ -539,18 +539,10 @@ class MyParser(object):
             return None
         new_node = Node("whilestmts")
         save = globals()["current_token_index"]
-        if new_node.add_child(self.is_value(self.get_token(), L_PAREN)):
-            if new_node.add_child(self.is_value(self.get_token(), KEYWORD_WHILE)):
-                if new_node.add_child(self.expr()):
-                    if new_node.add_child(self.exprlist()):
-                        if new_node.add_child(self.is_value(self.get_token(), R_PAREN)):
-                            pass
-                        else:
-                            globals()["current_token_index"] = save
-                            return None
-                    else:
-                        globals()["current_token_index"] = save
-                        return None
+        if new_node.add_child(self.is_value(self.get_token(), KEYWORD_WHILE)):
+            if new_node.add_child(self.expr()):
+                if new_node.add_child(self.exprlist()):
+                    pass
                 else:
                     globals()["current_token_index"] = save
                     return None
@@ -572,8 +564,6 @@ class MyParser(object):
         if new_node.add_child(self.expr()):
             if new_node.add_child(self.exprlist()):
                 pass
-            else:
-                globals()["current_token_index"] = save
         else:
             globals()["current_token_index"] = save
             self.parse_error("not expression list")
@@ -586,17 +576,9 @@ class MyParser(object):
             return None
         new_node = Node("letstmts")
         save = globals()["current_token_index"]
-        if new_node.add_child(self.is_value(self.get_token(), L_PAREN)):
-            if new_node.add_child(self.is_value(self.get_token(), KEYWORD_LET)):
-                if new_node.add_child(self.varlist()):
-                    if new_node.add_child(self.is_value(self.get_token(), R_PAREN)):
-                        pass
-                    else:
-                        globals()["current_token_index"] = save
-                        return None
-                else:
-                    globals()["current_token_index"] = save
-                    return None
+        if new_node.add_child(self.is_value(self.get_token(), KEYWORD_LET)):
+            if new_node.add_child(self.varlist()):
+                pass
             else:
                 globals()["current_token_index"] = save
                 return None
@@ -623,10 +605,11 @@ class MyParser(object):
                     else:
                         globals()["current_token_index"] = save
                 else:
-                    pass
-                    # check of type failed
+                    globals()["current_token_index"] = save
+                    return new_node
             else:
                 globals()["current_token_index"] = save
+                return None
         else:
             globals()["current_token_index"] = save
             self.parse_error("not varlist")

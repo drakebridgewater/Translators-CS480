@@ -14,9 +14,9 @@ class CodeGen(object):
         # TODO as we step through the tree convert and push element on to stack
         self.get_tokens_stack()
         self.print_stack()
-        while self.index < len(self.stack):
-            self.do_something(self.stack[self.index])
-        pass
+        # while self.index < len(self.stack):
+        # self.do_something(self.stack[self.index])
+        # pass
 
     def out(self, msg):
         print(msg)

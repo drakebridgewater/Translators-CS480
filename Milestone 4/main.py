@@ -3,6 +3,7 @@ __author__ = 'Drake'
 import sys
 
 from myparser import *
+from codegen import *
 
 
 usage = """
@@ -50,8 +51,8 @@ def main():
     parser.control()
     tree = parser.tree
     tree.print_postordered_tree()
-    # codegen = CodeGen(tree)
-    # codegen.control()
+    codegen = CodeGen(tree)
+    codegen.control()
 
 
 if __name__ == '__main__':
