@@ -56,7 +56,7 @@ class Lexer():
             if self.current_char == ' ' or self.current_char == '\t':
                 self.get_next_char()
                 pass
-            elif self.current_char == '\n':
+            elif self.current_char is '\n':
                 self.get_next_char()
                 self.line += 1
             elif self.current_char in self.accepted_ops:
@@ -247,8 +247,8 @@ class Lexer():
                         word += str(exp)
                         return self.create_token(("float", float(word)))
                     except ValueError:
-                        print("Lexer Error: [row: " + str(self.line) + "] Unable to parse '" +
-                              str(self.current_char) + "' in: " + str(exp))
+                        print_error("Unable to parse '" + str(self.current_char) +
+                                    "' in: " + str(exp), self.line, 'lexer')
             elif self.is_digit(other_accepted):
                 word += self.current_char
                 self.get_next_char()
@@ -261,14 +261,14 @@ class Lexer():
             try:
                 return self.create_token(("float", float(word)))
             except ValueError:
-                print("Lexer Error (line: " + str(self.line) +
-                      "): could not determine numerical token of: " + str(word))
+                print_error("could not determine numerical token of: " +
+                            str(word), self.line, 'lexer')
         else:
             try:
                 return self.create_token(("int", int(word)))
             except ValueError:
-                print("Lexer Error (line: " + str(self.line) +
-                      "): could not determine numerical token of: " + str(word))
+                print_error("could not determine numerical token of: " +
+                            str(word), self.line, 'lexer')
 
     # Function Description:
     # checks to see if the current token in peek is a digit or '.'

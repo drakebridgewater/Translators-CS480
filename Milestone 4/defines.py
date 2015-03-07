@@ -55,6 +55,7 @@ def print_token(token, indent = 0):
           ", ID: " + token.type +
           ", Value: " + str(token.value) + "]")
 
+
 class Token:
     type = ''
     value = ''

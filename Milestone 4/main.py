@@ -14,7 +14,7 @@ Usage:
 files = []
 options = []
 global DEBUG
-DEBUG = 1
+DEBUG = 0
 
 global current_token_index
 current_token_index = 0

@@ -54,18 +54,18 @@ class Node(object):
         for child in node.children:
             # if child.get_child_count() > 0:
             # if child.data is not None:
-            if isinstance(child, int):
-                print("\t" * indent + str(child))
-            elif isinstance(child, str):
-                print("\t" * indent + str(child))
-            elif hasattr(child, "data"):
+            if hasattr(child, "data"):
                 if hasattr(child.data, "value"):
                     print_token(child.data, indent)
                 else:
                     print("\t" * indent + str(child.data))
                 self.print_tree_helper(child, indent)
             elif hasattr(child, "value"):
-                    print_token(child.data, indent)
+                print_token(child.data, indent)
+            elif isinstance(child, int):
+                print("\t" * indent + str(child))
+            elif isinstance(child, str):
+                print("\t" * indent + str(child))
             else:
                 print("Error in print_tree_helper")
                 print(child)
@@ -79,8 +79,8 @@ class Node(object):
 
     def post_order_tree_print(self, node):
         for child in node.children:
-            self.post_order_tree_print(child)
             self.print_child(child, 0)
+            self.post_order_tree_print(child)
 
     def print_child(self, child, indent):
         if isinstance(child, int):
@@ -233,7 +233,6 @@ class MyParser(object):
         else:
             self.parse_error("could not find grammar in s")
             globals()["current_token_index"] = save
-            new_node.print_tree()
             return None
         return new_node
 
