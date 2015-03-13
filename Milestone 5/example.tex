@@ -1,0 +1,242 @@
+\documentclass[letterpaper,10pt]{article}
+
+\usepackage{graphicx}                                        
+\usepackage{amssymb}                                         
+\usepackage{amsmath}                                         
+\usepackage{amsthm}                                          
+
+\usepackage{alltt}                                           
+\usepackage{float}
+\usepackage{color}
+\usepackage{url}
+
+\usepackage{balance}
+\usepackage[TABBOTCAP, tight]{subfigure}
+\usepackage{enumitem}
+\usepackage{pstricks, pst-node}
+
+\usepackage{geometry}
+\geometry{textheight=8.5in, textwidth=6in}
+
+\usepackage{tikz}
+\usetikzlibrary{arrows,automata}
+
+%----------------------------------------------------------------------------------------
+%       Box arround answers use: 
+%		\begin{mdframed}[style=MyFrame]
+%		\end{mdframed}
+%----------------------------------------------------------------------------------------
+\usepackage{etex}
+\usepackage{tikz}
+\usepackage{tikz-qtree}
+
+\usepackage[framemethod=TikZ]{mdframed}
+\mdfdefinestyle{MyFrame}{%
+    innertopmargin=\baselineskip,
+    innerbottommargin=\baselineskip,
+    innerrightmargin=20pt,
+    innerleftmargin=20pt,
+    backgroundcolor=gray!5!white,
+    splitbottomskip = 5mm,
+    splittopskip = 5mm,
+    skipabove=5mm}
+    
+%----------------------------------------------------------------------------------------
+%         Setting for importing code files
+%     http://en.wikibooks.org/wiki/LaTeX/Source_Code_Listings
+%----------------------------------------------------------------------------------------
+
+\usepackage{import}
+\usepackage{listings}
+\usepackage{color}
+
+\definecolor{mygreen}{rgb}{0,0.6,0}
+\definecolor{mygray}{rgb}{0.5,0.5,0.5}
+\definecolor{mymauve}{rgb}{0.58,0,0.82}
+
+\lstset{ %
+  backgroundcolor=\color{white},   % choose the background color; you must add \usepackage{color} or \usepackage{xcolor}
+  basicstyle=\small,        % the size of the fonts that are used for the code
+  breakatwhitespace=false,         % sets if automatic breaks should only happen at whitespace
+  breaklines=true,                 % sets automatic line breaking
+  captionpos=b,                    % sets the caption-position to bottom
+  commentstyle=\color{mygreen},    % comment style
+  deletekeywords={...},            % if you want to delete keywords from the given language
+  escapeinside={\%*}{*)},          % if you want to add LaTeX within your code
+  extendedchars=true,              % lets you use non-ASCII characters; for 8-bits encodings only, does not work with UTF-8
+%  frame=single,                    % adds a frame around the code
+  keepspaces=true,                 % keeps spaces in text, useful for keeping indentation of code (possibly needs columns=flexible)
+  keywordstyle=\color{blue},       % keyword style
+  language=Octave,                 % the language of the code
+  morekeywords={*,...},            % if you want to add more keywords to the set
+  numbers=left,                    % where to put the line-numbers; possible values are (none, left, right)
+  numbersep=8pt,                   % how far the line-numbers are from the code
+  numberstyle=\tiny\color{mygray}, % the style that is used for the line-numbers
+  rulecolor=\color{black},         % if not set, the frame-color may be changed on line-breaks within not-black text (e.g. comments (green here))
+  showspaces=false,                % show spaces everywhere adding particular underscores; it overrides 'showstringspaces'
+  showstringspaces=false,          % underline spaces within strings only
+  showtabs=false,                  % show tabs within strings adding particular underscores
+  stepnumber=2,                    % the step between two line-numbers. If it's 1, each line will be numbered
+  stringstyle=\color{mymauve},     % string literal style
+  tabsize=2,                       % sets default tabsize to 2 spaces
+  title=\lstname                   % show the filename of files included with \lstinputlisting; also try caption instead of title
+}
+
+%----------------------------------------------------------------------------------------
+
+\newcommand{\toc}{\tableofcontents}
+
+\usepackage{hyperref}
+
+\def\name{Drake Bridgewater }
+\def\title{Milestone 4: Constant Only Calculations }
+\def\subtitle{}
+\def\subject{CS }
+\def\courseNumber{352 }
+\def\courseName{TRANSLATORS }
+\def\courseInfo{Winter 2015 }%Class Time: MWF X-X:XX AM}
+\def\supervisor{Dr. Jennifer \textsc{Parham-Mocello }} % Supervisor's Name
+
+%% The following metadata will show up in the PDF properties
+ \hypersetup{
+   colorlinks = false,
+   urlcolor = black,
+   pdfauthor = {\name},
+   pdfkeywords = {\title, \subject, \courseNumber, \courseName, \supervisor},
+   pdftitle = {\title},
+   pdfsubject = {\subject},
+   pdfpagemode = UseNone
+ }
+
+\parindent = 0.0 in
+\parskip = 0.1 in
+
+\begin{document}
+
+
+\begin{titlepage}
+
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}} % Defines a new command for the horizontal lines, change thickness here
+
+\center % Center everything on the page
+ 
+%----------------------------------------------------------------------------------------
+%        HEADING SECTIONS
+%----------------------------------------------------------------------------------------
+
+\textsc{\LARGE Oregon State University}\\[1.5cm] % Name of your university/college
+\textsc{\Large \subject \courseNumber - \courseName}\\[0.5cm] % Major heading such as course name
+\textsc{\large \courseInfo}\\[1.5cm] % Minor heading such as course title
+
+%----------------------------------------------------------------------------------------
+%        TITLE SECTION
+%----------------------------------------------------------------------------------------
+
+\HRule \\[0.4cm]
+{ \huge \bfseries \title }\\[0.1cm] % Title of your document
+{\small \textit{\textbf{ \subtitle }}}\\[0.2cm]
+\HRule \\[7.5cm]
+ 
+%----------------------------------------------------------------------------------------
+%        AUTHOR SECTION
+%----------------------------------------------------------------------------------------
+
+\begin{minipage}{0.4\textwidth}
+\begin{flushleft} \large
+\emph{Author:}\\
+\name
+\end{flushleft}
+\end{minipage}
+~
+\begin{minipage}{0.4\textwidth}
+\begin{flushright} \large
+\emph{Professor:} \\
+\supervisor
+\end{flushright}
+\end{minipage}\\[4cm]
+
+% If you don't want a supervisor, uncomment the two lines below and remove the section above
+%\Large \emph{Author:}\\
+%John \textsc{Smith}\\[3cm] % Your name
+
+%----------------------------------------------------------------------------------------
+%        DATE SECTION
+%----------------------------------------------------------------------------------------
+
+DUE 01/16/15 (11:59pm)\\
+{\large \today}\\[3cm] % Date, change the \today to a set date if you want to be precise
+
+%----------------------------------------------------------------------------------------
+%        LOGO SECTION
+%----------------------------------------------------------------------------------------
+
+%\includegraphics{Logo}\\[1cm] % Include a department/university logo - this will require the graphicx package
+ 
+%----------------------------------------------------------------------------------------
+
+\vfill % Fill the rest of the page with whitespace
+
+\end{titlepage}
+
+\tableofcontents
+\vfill % Fill the rest of the page with whitespace
+\newpage
+
+\section{Source Code Descriptions}
+\begin{mdframed}[style=MyFrame]
+The way I approached this problem was one paper with drawing out what how I would perform each of of the operations for a given string. With a few iterations I was able to create the parser that logically followed the grammar, but some modification we needed to account for the left recursion and to factor out the repeated tokens. 
+\end{mdframed}
+\subsection{node.py}
+\begin{mdframed}[style=MyFrame]
+Since a tree is just a single node with child nodes I created a node that would allow printing in a familiar format for easy readability 
+\end{mdframed}
+\subsection{codegen.py}
+\begin{mdframed}[style=MyFrame]
+This was created to take the tree that we created in the last assignment. With the tree we would walk through it, post-order, and then as we saw the elements we pushed them out to to file. This allowed the code to be rather simple. Once that was finished I converted the variable to gforth code and wrote that to another file.
+\end{mdframed}
+\subsection{defines.py}
+\begin{mdframed}[style=MyFrame]
+I decided to place all the global variable into a file for easy manipulation. This fill contains the token ID and also defines what a token is. 
+\end{mdframed}
+\subsection{myparser.py}
+\begin{mdframed}[style=MyFrame]
+The bulk of this project was to develop a parser that will spit out a list of tokens in a fashion that would allow seeing scope. \supervisor recommended that we implement it as a tree therefore the node I created. Every time I saw a object in the grammar including 's', 'expr', 'oper', etc. I would create a token and depending on how it is related to its parent it would be added as a child or as a leaf node along side. Once I had this idea I need to come up with a way of documenting my trails to the node for debugging purposes therefore I added a need node each time a function was called and when a function was called within it would be added as a child. 
+\end{mdframed}
+\subsection{lexer.py}
+\begin{mdframed}[style=MyFrame]
+The lexer of this assignment was to recognize the chars one at a time and take the one with the longest prefix. This would allow gathering o 
+\end{mdframed}
+
+\newpage
+\section{Report}
+%Handwritten Answers to Milestone Questions:
+%Specification (what do you think the purpose of this milestone is)
+%Processing (how did you go about solving the problem)
+%Testing Requirement (how did you test for correctness)
+%Retrospective (what did you learn in this milestone)
+
+\begin{mdframed}[style=MyFrame]
+This assignment was much easier then I thought it was going to be but \textbf{the purpose} of this assignment was to ensure that our tree was producing the correct output and that we understand tokens, trees and parsing. To approach this problem I need it to be simple therefore I took concepts that were taught early on, such as the post order tree traversal and the basic parsing, to produce gforth code. With a solid idea I was able to \textbf{solve} this problem mostly by a single if statement but then I need to do type checking to ensure that the values were coming in properly. During the entire process I was creating\textbf{ test} cases that would test the current function allowing me to get really good code coverage. 
+
+\end{mdframed}
+
+
+
+\newpage
+\section{Source Code}
+\subsection{main.py}
+\lstinputlisting[language=Python]{main.py}
+\subsection{codegen.py}
+\lstinputlisting[language=Python]{codegen.py}
+\subsection{node.py}
+\lstinputlisting[language=Python]{node.py}
+\subsection{defines.py}
+\lstinputlisting[language=Python]{defines.py}
+\subsection{myparser.py}
+\lstinputlisting[language=Python]{myparser.py}
+\subsection{lexer.py}
+\lstinputlisting[language=Python]{lexer.py}
+
+
+
+\end{document}
