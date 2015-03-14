@@ -576,10 +576,21 @@ class MyParser(object):
         new_node = Node("letstmts")
         save = globals()["current_token_index"]
         if new_node.add_child(self.is_value(self.get_token(), KEYWORD_LET)):
-            if new_node.add_child(self.varlist()):
-                pass
+            if new_node.add_child(self.is_value(self.get_token(), L_PAREN)):
+                if new_node.add_child(self.varlist()):
+                    pass
+                else:
+                    globals()["current_token_index"] = save
+                    return None
+                if new_node.add_child(self.is_value(self.get_token(), R_PAREN)):
+                    pass
+                else:
+                    globals()["current_token_index"] = save
+                    print_error("missing right paren in let statement", error_type="parser")
+                    return None
             else:
                 globals()["current_token_index"] = save
+                print_error("missing opening paren after let statement")
                 return None
         else:
             globals()["current_token_index"] = save

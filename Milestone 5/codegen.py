@@ -44,15 +44,15 @@ class CodeGen(object):
             OPER_COS: 1}
         self.other_tokens = {
             KEYWORD_STDOUT: '.s',
-            KEYWORD_LET: 'let',
+            # KEYWORD_LET: 'let',
             KEYWORD_IF: 'if',
             KEYWORD_WHILE: 'while',
             KEYWORD_TRUE: "true",
-            KEYWORD_FALSE: "false",
-            TYPE_BOOL: 'bool',
-            TYPE_INT: 'int',
-            TYPE_REAL: 'float',
-            TYPE_STRING: 'string'
+            KEYWORD_FALSE: "false"
+            # TYPE_BOOL: 'bool',
+            # TYPE_INT: 'int',
+            # TYPE_REAL: 'float',
+            # TYPE_STRING: 'string'
         }
         self.conversions = {
             "%": "mod",
@@ -114,17 +114,23 @@ class CodeGen(object):
                         pass
                     elif prev_was_assign:
                         self.current_scope.append(data[x].value)
+                        oper_hold = str(data[x].value)
                     else:
                         print_error("unassigned variable " + str(data[x].value), error_type="codegen")
                     self.gforth.append(str(data[x].value))
                 elif data[x].type == TYPE_REAL:
-                    if not prev_was_real:
+                    if self.gforth[-1] is "variable":
+                        self.gforth.pop()
+                        self.gforth.append("fvariable")
+                    if prev_was_assign:
+                        append_end = True
+                    elif prev_was_int:
+                        append_end = True
+                        convert = True
+                    elif not prev_was_real:
                         prev_was_real = True
                     elif prev_was_real:
                         append_end = True
-                    if prev_was_int:
-                        append_end = True
-                        convert = True
                     self.gforth.append(str(data[x].value) + 'e0')
                 elif data[x].type == TYPE_STRING:
                     if not prev_was_string:
@@ -135,13 +141,15 @@ class CodeGen(object):
                     self.gforth.append('s" ' + str(data[x].value) + '"')
                 elif data[x].type is TYPE_INT:
                     additional = ''
-                    if not prev_was_int:
-                        prev_was_int = True
-                    elif prev_was_int:
+                    if prev_was_assign:
                         append_end = True
-                    if prev_was_real:
+                    elif prev_was_real:
                         convert = True
                         additional = ' fswap'
+                        append_end = True
+                    elif not prev_was_int:
+                        prev_was_int = True
+                    elif prev_was_int:
                         append_end = True
                     self.gforth.append(str(data[x].value) + additional)
                 elif data[x].value in ['=', '+', '-', '/', '*', '<', '>', '!', ';', ':', '%', '^']:
@@ -149,8 +157,13 @@ class CodeGen(object):
                 elif data[x].value in self.other_tokens:
                     self.gforth.append(self.other_tokens[data[x].value])
                 elif data[x].value == OPER_ASSIGN:
-                    self.gforth.append("Assign")
                     prev_was_assign = True
+                elif data[x].type == KEYWORD:
+                    if data[x].value == 'let':
+                        prev_was_assign = True
+                        self.gforth.append("variable")
+                    else:
+                        print_error("error")
                 elif data[x].value is L_PAREN:
                     self.scope_stack.append(L_PAREN)
                 elif data[x].value is R_PAREN:
@@ -162,6 +175,7 @@ class CodeGen(object):
                         prev_was_string = False
                         prev_was_real = False
                         prev_was_int = False
+                        prev_was_assign = False
                         append_end = False
                         oper_hold = ''
                     except IndexError:

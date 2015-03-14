@@ -35,11 +35,13 @@ KEYWORD_IF = 'if'
 KEYWORD_WHILE = 'while'
 KEYWORD_TRUE = "true"
 KEYWORD_FALSE = "false"
+KEYWORD = 'keywords'
 TYPE_BOOL = 'bool'
 TYPE_INT = 'int'
 TYPE_REAL = 'float'
 TYPE_STRING = 'string'
 TYPE_ID = 'ID'
+
 
 
 def print_error(msg, line='NA', error_type='general'):
