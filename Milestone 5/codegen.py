@@ -1,5 +1,6 @@
 __author__ = 'drakebridgewater'
 from defines import *
+from tree import *
 
 
 class Scope:
@@ -224,7 +225,7 @@ class CodeGen(object):
             temp_token = self.is_token(child)
             if temp_token:
                 # self.stack.append(temp_token)
-                self.gen(temp_token, node.data, len(node.children))
+                self.gen(temp_token, len(node.children))
 
     def is_token(self, child):
         if isinstance(child, int):
@@ -263,8 +264,18 @@ class CodeGen(object):
             pass
 
     def reduce_tree(self):
-        self._reduce_tree(self.tree.root[0], self.tree.root)
+        temp_token = Token()
+        temp_token.type = TYPE_ID
+        temp_token.value = "SOF"
+        self.redueced_tree = Node(temp_token)
+        self._reduce_tree(self.tree.root[0], temp_token)
 
-    def _reduce_tree(self, old_node, new_node):
-        if hasattr(old_node, "value"):
-            new_node.append()
+    def _reduce_tree(self, node):
+        new_children = []
+        for child in node.children:
+            if hasattr(child, "value"):
+                new_children.append()
+            else:
+                new_children.append(self._reduce_tree(child))
+        node.children = new_children
+        return node

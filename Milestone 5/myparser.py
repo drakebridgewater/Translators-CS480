@@ -16,9 +16,6 @@ class Node(object):
     def add_child(self, obj):
         if obj is None:
             return obj
-        if hasattr(obj, "value"):
-            # is a token
-            self.data
         self.children.append(obj)
         return True
 
