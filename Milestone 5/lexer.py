@@ -105,7 +105,7 @@ class Lexer():
             self.get_next_char()
             # if self.current_char is '-':
             # item += self.current_char  # Seen -- make new token
-            #    self.get_next_char()
+            # self.get_next_char()
             return self.create_token((self.has_token(item), item))
         elif self.current_char in ('<', '>', '!'):
             self.get_next_char()

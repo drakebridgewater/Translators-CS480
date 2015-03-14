@@ -10,6 +10,8 @@ class Scope:
 
 class CodeGen(object):
     def __init__(self, tree):
+        self.redueced_tree = None
+        self.error_flag = False
         self.tree = tree
         self.current_token = None
         self.stack = []
@@ -88,9 +90,17 @@ class CodeGen(object):
     def out(msg):
         print(msg)
 
-    # Function Description:
-    # Only write out if data is actually data
     def write_out(self):
+    #     while self.get_next_token() and not self.error_flag:
+    #         # Loop as long as we are recieving a token and we have not thrown flag
+    #         pass
+    #
+    # def get_next_token(self):
+    #     pass
+    #
+    # # Function Description:
+    # # Only write out if data is actually data
+    # def write_out_old(self):
         data = self.stack
         prev_was_string = False
         prev_was_real = False
@@ -205,6 +215,7 @@ class CodeGen(object):
         return False
 
     def get_tokens_stack(self):
+        print_title("test")
         self._get_token_stack(self.tree)
 
     def _get_token_stack(self, node):
@@ -212,7 +223,8 @@ class CodeGen(object):
             self._get_token_stack(child)
             temp_token = self.is_token(child)
             if temp_token:
-                self.stack.append(temp_token)
+                # self.stack.append(temp_token)
+                self.gen(temp_token, node.data, len(node.children))
 
     def is_token(self, child):
         if isinstance(child, int):
@@ -233,3 +245,26 @@ class CodeGen(object):
         print_title("print tree called")
         for token in self.stack:
             print_token(token)
+
+    def gen(self, token, siblings):
+        print('-'*5)
+        print_token(token)
+        print(siblings)
+
+        if token.type is TYPE_ID:
+            pass
+        elif token.type is TYPE_INT:
+            pass
+        elif token.type is TYPE_STRING:
+            pass
+        elif token.type is TYPE_REAL:
+            pass
+        elif token.type is KEYWORD:
+            pass
+
+    def reduce_tree(self):
+        self._reduce_tree(self.tree.root[0], self.tree.root)
+
+    def _reduce_tree(self, old_node, new_node):
+        if hasattr(old_node, "value"):
+            new_node.append()

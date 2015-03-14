@@ -44,8 +44,8 @@ class Node():
 
 
 class Tree():
-    def __init__(self, rootValue):
-        self.root = Node(rootValue)
+    def __init__(self, root_value):
+        self.root = Node(root_value)
         self.currentLocation = self.root
         # equal one because we just added one
         self.size = 1
@@ -55,16 +55,16 @@ class Tree():
 
     def add_node(self, value):
         print("adding node with token: " + value)
-        newNode = Node(value)
-        self.currentLocation.add_child(newNode)
+        new_node = Node(value)
+        self.currentLocation.add_child(new_node)
         self.size += 1
 
     def go_to_child_node(self, child_value):
         print("trying to move to: " + child_value)
-        nextMove = self.currentLocation.get_child(child_value)
-        print("Moving to child with token: " + nextMove.get_value())
-        if nextMove != -1:
-            self.currentLocation = nextMove
+        next_move = self.currentLocation.get_child(child_value)
+        print("Moving to child with token: " + next_move.get_value())
+        if next_move != -1:
+            self.currentLocation = next_move
         else:
             print("**error could not get child to move to")
 

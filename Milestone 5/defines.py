@@ -43,7 +43,6 @@ TYPE_STRING = 'string'
 TYPE_ID = 'ID'
 
 
-
 def print_error(msg, line='NA', error_type='general'):
     print(error_type.upper() + " ERROR: [line: " + str(line) + "] " + msg)
 
@@ -52,7 +51,7 @@ def print_title(msg):
     print("-" * 40 + "\n" + msg.upper() + "\n" + "-" * 40)
 
 
-def print_token(token, indent = 0):
+def print_token(token, indent=0):
     print("\t" * indent + "[line: " + str(token.line) +
           ", ID: " + token.type +
           ", Value: " + str(token.value) + "]")

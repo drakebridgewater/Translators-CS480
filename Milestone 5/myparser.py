@@ -16,33 +16,11 @@ class Node(object):
     def add_child(self, obj):
         if obj is None:
             return obj
+        if hasattr(obj, "value"):
+            # is a token
+            self.data
         self.children.append(obj)
         return True
-
-    def get_child_at(self, index):
-        return self.children[index]
-
-    def get_first_child_at_parent(self, obj):
-        if len(obj.children) > 0:
-            return obj.children[0]
-        else:
-            return self.children[0]
-
-    def get_first_child_at_parent_level(self, obj, level):
-        if level == 0:
-            return self.children[0]
-        else:
-            if level >= 1:
-                if len(obj.children) > 0:
-                    return obj.children[0]
-                else:
-                    return self.children[0]
-            else:
-                return self.children[0]
-
-    @staticmethod
-    def get_parent_depth(obj):
-        return obj.depth
 
     def print_tree(self):
         print_title("print tree")
