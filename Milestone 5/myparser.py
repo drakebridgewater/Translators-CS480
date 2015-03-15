@@ -178,12 +178,12 @@ class MyParser(object):
         save = globals()["current_token_index"]
         if new_node.add_child(self.is_value(self.get_token(), L_PAREN)) \
                 and new_node.add_child(self.s_prime()):
-            print("FOUND: (S' ")
+            print_log("FOUND: (S' ")
         elif new_node.add_child(self.oper()) \
                 and new_node.add_child(self.s()):
-            print("FOUND: oper3 S")
+            print_log("FOUND: oper3 S")
         elif new_node.add_child(self.oper()):
-            print("FOUND oper3")
+            print_log("FOUND oper3")
         else:
             self.parse_error("could not find grammar in s")
             globals()["current_token_index"] = save
@@ -195,16 +195,16 @@ class MyParser(object):
         new_node = Node("S")
         save = globals()["current_token_index"]
         if new_node.add_child(self.is_value(self.get_token(), R_PAREN)):
-            print("FOUND: )")
+            print_log("FOUND: )")
         elif new_node.add_child(self.s()) \
                 and new_node.add_child(self.is_value(self.get_token(), R_PAREN)):
-            print("FOUND: S )")
+            print_log("FOUND: S )")
         elif new_node.add_child(self.expr2()) \
                 and new_node.add_child(self.is_value(self.get_token(), R_PAREN)):
-            print("FOUND: expr2 )")
+            print_log("FOUND: expr2 )")
         elif new_node.add_child(self.is_value(self.get_token(), R_PAREN)) \
                 and new_node.add_child(self.s()):
-            print("FOUND: ) S")
+            print_log("FOUND: ) S")
         else:
             self.parse_error("could not find grammar in s")
             globals()["current_token_index"] = save
@@ -220,9 +220,9 @@ class MyParser(object):
         if new_node.add_child(self.is_value(self.get_token(), L_PAREN)) \
                 and new_node.add_child(self.expr2()) \
                 and new_node.add_child(self.is_value(self.get_token(), R_PAREN)):
-            print("FOUND: ( expr2 )")
+            print_log("FOUND: ( expr2 )")
         elif new_node.add_child(self.oper3()):
-            print("FOUND: oper3")
+            print_log("FOUND: oper3")
         else:
             globals()["current_token_index"] = save
             return None
@@ -235,9 +235,9 @@ class MyParser(object):
         new_node = Node("expr3")
         save = globals()["current_token_index"]
         if new_node.add_child(self.stmts()):
-            print("FOUND: stmts")
+            print_log("FOUND: stmts")
         elif new_node.add_child((self.oper2())):
-            print("FOUND: oper2")
+            print_log("FOUND: oper2")
         else:
             globals()["current_token_index"] = save
             return None
@@ -254,13 +254,13 @@ class MyParser(object):
         if new_node.add_child(self.is_value(self.get_token(), L_PAREN)) \
                 and new_node.add_child(self.oper2()) \
                 and new_node.add_child(self.is_value(self.get_token(), R_PAREN)):
-            print("FOUND: (oper2)")
+            print_log("FOUND: (oper2)")
         elif new_node.add_child(self.oper3()):
-            print("FOUND: oper3")
+            print_log("FOUND: oper3")
         else:
             self.parse_error("missing oper constant or name")
             current_token_index = saved_token_index
-            new_node.print_tree()
+            # new_node.print_tree()
             return None
         return new_node
 
@@ -277,14 +277,14 @@ class MyParser(object):
         if new_node.add_child(self.is_value(self.get_token(), OPER_ASSIGN)) \
                 and new_node.add_child(self.is_type(self.get_token(), TYPE_ID)) \
                 and new_node.add_child(self.oper()):
-            print("FOUND: := Name Oper")
+            print_log("FOUND: := Name Oper")
         elif new_node.add_child(self.binops()) \
                 and new_node.add_child(self.oper()) \
                 and new_node.add_child(self.oper()):
-            print("FOUND: Binop Oper Oper")
+            print_log("FOUND: Binop Oper Oper")
         elif new_node.add_child(self.unops()) \
                 and new_node.add_child(self.oper()):
-            print("FOUND: Unop Oper")
+            print_log("FOUND: Unop Oper")
         else:
             self.parse_error("missing oper2 constant or name")
             current_token_index = saved_token_index
@@ -299,9 +299,9 @@ class MyParser(object):
         new_node = Node("oper3")
         saved_token_index = current_token_index
         if new_node.add_child(self.constants()):
-            print("FOUND: constants")
+            print_log("FOUND: constants")
         elif new_node.add_child(self.name()):
-            print("FOUND: name")
+            print_log("FOUND: name")
         else:
             self.parse_error("missing left paren constant or name")
             current_token_index = saved_token_index
@@ -449,13 +449,13 @@ class MyParser(object):
         new_node = Node("stmts")
         save = globals()["current_token_index"]
         if new_node.add_child(self.ifstmts()):
-            print("FOUND: ifstmts")
+            print_log("FOUND: ifstmts")
         elif new_node.add_child(self.whilestmts()):
-            print("FOUND: whilestmts")
+            print_log("FOUND: whilestmts")
         elif new_node.add_child(self.letstmts()):
-            print("FOUND: letstmts")
+            print_log("FOUND: letstmts")
         elif new_node.add_child(self.printstmts()):
-            print("FOUND: printstmts")
+            print_log("FOUND: printstmts")
         else:
             self.parse_error("missing if, while, let or print statment")
             globals()["current_token_index"] = save
@@ -470,7 +470,7 @@ class MyParser(object):
         save = globals()["current_token_index"]
         if new_node.add_child(self.is_value(self.get_token(), KEYWORD_STDOUT)) \
                 and new_node.add_child(self.oper()):
-            print("FOUND: stdout oper")
+            print_log("FOUND: stdout oper")
         else:
             globals()["current_token_index"] = save
             self.parse_error("missing print statement paren")
@@ -486,7 +486,7 @@ class MyParser(object):
         if new_node.add_child(self.is_value(self.get_token(), KEYWORD_IF)) \
                 and new_node.add_child(self.expr()) \
                 and new_node.add_child(self.ifstmts2()):
-            print("FOUND: if expr if2")
+            print_log("FOUND: if expr if2")
         else:
             globals()["current_token_index"] = save
             self.parse_error("not an if statment")
@@ -610,7 +610,7 @@ class MyParser(object):
             pass
         elif new_node.add_child(self.is_value(self.get_token(), "int")):
             pass
-        elif new_node.add_child(self.is_value(self.get_token(), "real")):
+        elif new_node.add_child(self.is_value(self.get_token(), "float")):
             pass
         elif new_node.add_child(self.is_value(self.get_token(), "string")):
             pass

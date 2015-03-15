@@ -56,7 +56,7 @@ class Lexer():
             if self.current_char == ' ' or self.current_char == '\t':
                 self.get_next_char()
                 pass
-            elif self.current_char is '\n':
+            elif self.current_char == '\n':
                 self.get_next_char()
                 self.line += 1
             elif self.current_char in self.accepted_ops:

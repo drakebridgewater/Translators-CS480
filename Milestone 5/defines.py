@@ -53,11 +53,19 @@ def print_title(msg):
 
 def print_token(token, indent=0):
     print("\t" * indent + "[line: " + str(token.line) +
-          ", ID: " + token.type +
-          ", Value: " + str(token.value) + "]")
+          ",\t ID: " + token.type +
+          ",\t Value: " + str(token.value) +
+          # ",\t Siblings: " + str(token.siblings) +
+          "]")
+
+
+def print_log(msg):
+    print(msg)
+    pass
 
 
 class Token:
     type = ''
     value = ''
     line = ''
+    siblings = -1

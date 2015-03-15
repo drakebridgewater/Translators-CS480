@@ -1,46 +1,5 @@
 __author__ = 'Drake'
-
-
-class Node():
-    def __init__(self, value):
-        self.children = []
-        self.value = value
-        self.child_count = 0
-
-    def get_number_children(self):
-        return self.child_count
-
-    def get_value(self):
-        return self.value
-
-    def get_left_child(self):
-        return self.children[min(self.children)]
-
-    def get_right_child(self):
-        return self.children[max(self.children)]
-
-    # returns the child at idx
-    def get_child_at(self, idx):
-        if idx <= self.children.count():
-            return -1
-        return self.children[idx]
-
-    # Takes a token and return a child
-    def get_child(self, child_value):
-        for child in self.children:
-            if child_value == child.value:
-                return child
-
-        # return a error that it does not contain token searching for
-        return -1
-
-    def add_child(self, child):
-        self.children.append(child)
-        self.child_count += 1
-
-    def print_children(self, indent):
-        for child in self.children:
-            print("\t" * indent + child.value)
+from myparser import *
 
 
 class Tree():
