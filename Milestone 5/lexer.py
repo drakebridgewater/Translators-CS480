@@ -56,7 +56,7 @@ class Lexer():
             if self.current_char == ' ' or self.current_char == '\t':
                 self.get_next_char()
                 pass
-            elif self.current_char is '\n':
+            elif self.current_char == '\n':
                 self.get_next_char()
                 self.line += 1
             elif self.current_char in self.accepted_ops:
@@ -105,7 +105,7 @@ class Lexer():
             self.get_next_char()
             # if self.current_char is '-':
             # item += self.current_char  # Seen -- make new token
-            #    self.get_next_char()
+            # self.get_next_char()
             return self.create_token((self.has_token(item), item))
         elif self.current_char in ('<', '>', '!'):
             self.get_next_char()

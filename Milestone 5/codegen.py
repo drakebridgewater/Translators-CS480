@@ -1,5 +1,6 @@
 __author__ = 'drakebridgewater'
 from defines import *
+from myparser import *
 
 
 class Scope:
@@ -10,49 +11,27 @@ class Scope:
 
 class CodeGen(object):
     def __init__(self, tree):
+        self.error_flag = False
         self.tree = tree
         self.current_token = None
         self.stack = []
         self.scope_stack = []
         self.current_scope = []
+        self.variables = []
         self.gforth = []
-        self.next_tree_item = False
         self.index = 0
-        self.oper_count = {
-            OPER_EQ: 2,
-            OPER_ASSIGN: 2,
-            OPER_ADD: 2,
-            OPER_SUB: 2,
-            OPER_DIV: 2,
-            OPER_MULT: 2,
-            OPER_LT: 2,
-            OPER_GT: 2,
-            OPER_LE: 2,
-            OPER_GE: 2,
-            OPER_NE: 2,
-            OPER_NOT: 2,
-            OPER_MOD: 2,
-            OPER_EXP: 2,
-            SEMI: 2,
-            L_PAREN: 2,
-            R_PAREN: 2,
-            OPER_AND: 2,
-            OPER_OR: 2,
-            OPER_NOT: 1,
-            OPER_SIN: 1,
-            OPER_TAN: 1,
-            OPER_COS: 1}
+        self.pointer = 0
         self.other_tokens = {
-            KEYWORD_STDOUT: '.s',
-            KEYWORD_LET: 'let',
+            # KEYWORD_STDOUT: '.s',
+            # KEYWORD_LET: 'let',
             KEYWORD_IF: 'if',
             KEYWORD_WHILE: 'while',
             KEYWORD_TRUE: "true",
-            KEYWORD_FALSE: "false",
-            TYPE_BOOL: 'bool',
-            TYPE_INT: 'int',
-            TYPE_REAL: 'float',
-            TYPE_STRING: 'string'
+            KEYWORD_FALSE: "false"
+            # TYPE_BOOL: 'bool',
+            # TYPE_INT: 'int',
+            # TYPE_REAL: 'float',
+            # TYPE_STRING: 'string'
         }
         self.conversions = {
             "%": "mod",
@@ -78,120 +57,396 @@ class CodeGen(object):
     def control(self):
         # TODO as we step through the tree convert and push element on to stack
         self.get_tokens_stack()
-        self.print_stack()
         print_title("CODE_GEN -- in progress")
+        self.print_stack()
         self.write_out()
+        self.gforth = self.rem_sll(self.gforth, L_PAREN)
+        self.gforth = self.rem_sll(self.gforth, R_PAREN)
+
         for x in self.gforth:
             print(x, end=" ")
+
+    def rem_sll(self, L, item):
+        answer = []
+        for i in L:
+            if i != item:
+                answer.append(i)
+        return answer
 
     @staticmethod
     def out(msg):
         print(msg)
 
-    # Function Description:
-    # Only write out if data is actually data
     def write_out(self):
+        print_title("write out called")
         data = self.stack
         prev_was_string = False
         prev_was_real = False
         prev_was_int = False
         prev_was_assign = False
+        prev_was_var = False
+        prev_was_if = False
+        prev_was_declare = False
+        prev_was_stdout = False
         append_end = False
-        oper_hold = ''
+        oper_hold = []
 
-        for x in range(len(self.stack)):
+        while self.pointer <= len(self.stack) - 1:
             try:
                 convert = False
 
                 if prev_was_real:
-                    if data[x].value in self.realConversions:
-                        oper_hold = self.realConversions[data[x].value]
-                    if data[x].type == TYPE_INT:
+                    if data[self.pointer].value in self.realConversions:
+                        oper_hold.append(self.realConversions[data[self.pointer].value])
+                    if data[self.pointer].type == TYPE_INT:
                         convert = True
 
-                if data[x].type == TYPE_ID:
-                    if data[x].value in self.current_scope:
+                if data[self.pointer].type == 'ops':
+                    if data[self.pointer].value is L_PAREN:
+                        self.gforth.append(L_PAREN)
+                        self.scope_stack.append(L_PAREN)
+                    elif data[self.pointer].value is R_PAREN:
+                        self.gforth.append(R_PAREN)
+                        try:
+                            if self.gforth[len(self.gforth) - 1] != '\n':
+                                self.gforth.append('\n')
+                            pop_value = self.scope_stack.pop()
+                            if 'whileloop' in pop_value:
+                                temp = pop_value.split("whileloop")
+                                self.gforth.append("whileloop" + temp[len(temp) - 1] + "\n")
+                            if 'ifloop' in pop_value:
+                                temp = pop_value.split("ifloop")
+                                self.gforth.append("ifloop" + temp[len(temp) - 1] + "\n")
+                                prev_was_if = False
+                            prev_was_string = False
+                            prev_was_real = False
+                            prev_was_int = False
+                            prev_was_assign = False
+                            prev_was_var = False
+                            prev_was_declare = False
+                            prev_was_stdout = False
+                            append_end = False
+                            oper_hold = []
+                        except IndexError:
+                            print_error("missing left paren", error_type="code_gen")
+                    elif data[self.pointer].value in ['+', '-', '/', '*', '<', '>', '!', ';', ':', '%', '^']:
+                        self.pointer = self.is_math_expr(self.pointer)
+                        # self.gforth.append(str(data[self.pointer].value))
+                elif data[self.pointer].type == TYPE_ID:
+                    if data[self.pointer].value in self.current_scope:
                         pass
-                    elif prev_was_assign:
-                        self.current_scope.append(data[x].value)
+                    elif prev_was_declare:
+                        if data[self.pointer].value in self.variables:
+                            print_error("redecloration of variable " + str(data[self.pointer].value),
+                                        error_type="codegen")
+                        self.current_scope.append(data[self.pointer].value)
+                        # oper_hold = str(data[self.pointer].value)
                     else:
-                        print_error("unassigned variable " + str(data[x].value), error_type="codegen")
-                    self.gforth.append(str(data[x].value))
-                elif data[x].type == TYPE_REAL:
-                    if not prev_was_real:
-                        prev_was_real = True
-                    elif prev_was_real:
-                        append_end = True
-                    if prev_was_int:
-                        append_end = True
-                        convert = True
-                    self.gforth.append(str(data[x].value) + 'e0')
-                elif data[x].type == TYPE_STRING:
-                    if not prev_was_string:
-                        prev_was_string = True
-                    elif prev_was_string:
-                        convert = True
-                        append_end = True
-                    self.gforth.append('s" ' + str(data[x].value) + '"')
-                elif data[x].type is TYPE_INT:
-                    additional = ''
-                    if not prev_was_int:
-                        prev_was_int = True
-                    elif prev_was_int:
-                        append_end = True
-                    if prev_was_real:
-                        convert = True
-                        additional = ' fswap'
-                        append_end = True
-                    self.gforth.append(str(data[x].value) + additional)
-                elif data[x].value in ['=', '+', '-', '/', '*', '<', '>', '!', ';', ':', '%', '^']:
-                    oper_hold = data[x].value
-                elif data[x].value in self.other_tokens:
-                    self.gforth.append(self.other_tokens[data[x].value])
-                elif data[x].value == OPER_ASSIGN:
-                    self.gforth.append("Assign")
-                    prev_was_assign = True
-                elif data[x].value is L_PAREN:
-                    self.scope_stack.append(L_PAREN)
-                elif data[x].value is R_PAREN:
-                    try:
-                        # prev_was_string = False
-                        # prev_was_real = False
-                        self.gforth.append('\n')
-                        self.scope_stack.pop()
-                        prev_was_string = False
-                        prev_was_real = False
-                        prev_was_int = False
-                        append_end = False
-                        oper_hold = ''
-                    except IndexError:
-                        print_error("missing left paren", error_type="code_gen")
-                else:
-                    print_error("unrecognized symbol " + str(data[x].value), error_type="codegen")
-                if convert:
-                    if prev_was_string:
-                        oper_hold = 's+'
+                        print_error("unassigned variable " + str(data[self.pointer].value), error_type="codegen")
+                    self.gforth.append(str(data[self.pointer].value))
+                    if prev_was_assign:
+                        self.gforth.append("!")
+                        # oper_hold.append(str(data[self.pointer].value))
+                        # oper_hold.append('!')
+                        # self.variables.append(data[self.pointer].value)
+
+                elif data[self.pointer].type == 'keywords':
+                    if data[self.pointer].value == OPER_ASSIGN:  # :=
+                        self.pointer = self.is_assign(self.pointer)
+                        prev_was_assign = True
+                    elif data[self.pointer].value == KEYWORD_STDOUT:
+                        self.pointer = self.is_stdout(self.pointer)
+                        prev_was_stdout = True
+                        pass
+                    elif data[self.pointer].value == KEYWORD_LET:  # Declare
+                        prev_was_declare = True
+                        self.gforth.append("variable")
+                        pass
+                    elif data[self.pointer].value == KEYWORD_IF:
+                        self.pointer = self.is_ifstmt(self.pointer)
+                        # if_stmts = "ifloop" + str(self.pointer)
+                        # self.scope_stack.append(if_stmts)
+                        # self.gforth.append(" : " + if_stmts)
+                    elif data[self.pointer].value == KEYWORD_WHILE:
+                        self.pointer = self.is_whilestmt(self.pointer)
+                        # while_stmts = "whileloop" + str(self.pointer)
+                        # self.scope_stack.append(while_stmts)
+                        # self.gforth.append(" : " + while_stmts)
+                elif data[self.pointer].type == TYPE_STRING:  # An actual string
+                    self.gforth.append('s" ' + str(data[self.pointer].value) + '"')
+                elif data[self.pointer].type == TYPE_INT:
+                    prev_was_int = True
+                    self.gforth.append(str(data[self.pointer].value))
+                    pass
+                elif data[self.pointer].type == TYPE_REAL:
+                    prev_was_real = True
+                    self.gforth.append(str(data[self.pointer].value) + "e0")
+                    pass
 
                 if append_end:
-                    if prev_was_real:
-                        self.gforth.append('s>f')
-                        self.gforth.append(self.realConversions[oper_hold])
-                    else:
-                        self.gforth.append(oper_hold)
+                    for op in oper_hold:
+                        self.gforth.append(op)
 
             finally:
-                pass
+                self.pointer += 1
         if len(self.scope_stack) != 0:
-            print_error("missing right paren", error_type="code_gen")
+            print_error("missing right paren [c]", error_type="code_gen")
+            print(self.scope_stack)
+        self.gforth.append("cr cr bye")
+        print("-" * 10)
 
-    def is_number(self, value1):
-        if hasattr(value1, "type") and value1.type in [TYPE_INT, TYPE_REAL]:
-            self.next_tree_item = True
-            return value1
-        return False
+    def is_stdout(self, x, if_stmts=False):
+        if self.stack[x].value == KEYWORD_STDOUT:
+            x += 1
+            if self.stack[x].value == L_PAREN:
+                self.gforth.append(L_PAREN)
+                x += 1
+                x = self.is_math_expr(x)
+                if not if_stmts:
+                    self.gforth.append(".")
+                x += 1
+                if self.stack[x].value == R_PAREN:
+                    self.gforth.append(R_PAREN)
+            elif self.stack[x].type == TYPE_STRING:
+                self.gforth.append('s" ' + self.stack[x].value + '"')
+                if not if_stmts:
+                    self.gforth.append(".s")
+            elif self.stack[x].type == TYPE_INT:
+                self.gforth.append(str(self.stack[x].value))
+                if not if_stmts:
+                    self.gforth.append(".s")
+            elif self.stack[x].type == TYPE_REAL:
+                self.gforth.append(str(self.stack[x].value) + "e0")
+                if not if_stmts:
+                    self.gforth.append("f.s")
+        return x
+
+    def is_assign(self, x):
+        oper_hold = ''
+        if self.stack[x].value == OPER_ASSIGN:
+            x += 1
+            if self.stack[x].type == TYPE_ID:
+                x += 1
+                if self.stack[x].value == L_PAREN:
+                    oper_hold = self.stack[x-1].value
+                    x += 1
+                    x = self.is_math_expr(x)
+                    if self.stack[x].value == R_PAREN:
+                        x += 1
+                    self.gforth.append(oper_hold)  # append ID
+                elif self.stack[x].type == TYPE_STRING:
+                    self.gforth.append('s" ' + self.stack[x - 1].value + '"')
+                elif self.stack[x].type == TYPE_INT:
+                    self.gforth.append(str(self.stack[x].value))
+                elif self.stack[x].type == TYPE_REAL:
+                    self.gforth.append(str(self.stack[x].value) + "e0")
+                else:
+                    print_error("in assignment missing value", error_type="codegen")
+                self.gforth.append(self.stack[x - 1].value)
+                self.gforth.append("!")
+                if oper_hold != '':
+                    self.gforth.append(oper_hold)
+                    self.gforth.append("@")
+        return x
+
+    def is_math_expr(self, x):
+        if self.stack[x].value in ['+', '-', '/', '*', '<', '>', '!', ';', ':', '%', '^']:
+            x += 1
+            if self.stack[x].type == TYPE_INT:
+                x += 1
+                if self.stack[x].type == TYPE_INT:  # int int
+                    self.gforth.append(self.stack[x - 1].value)
+                    self.gforth.append(self.stack[x].value)
+                    self.gforth.append(self.stack[x - 2].value)
+                elif self.stack[x].type == TYPE_REAL:  # int real
+                    self.gforth.append(self.stack[x - 1].value)
+                    self.gforth.append(str(self.stack[x].value) + "e0")
+                    self.gforth.append("fswap")
+                    self.gforth.append("s>f")
+                    self.gforth.append(self.realConversions[self.stack[x - 2].value])
+                elif self.stack[x].type == TYPE_ID:
+                    # TODO check if the variable exists
+                    self.gforth.append(self.stack[x - 1].value)  # value
+                    self.gforth.append(self.stack[x].value)  # variable
+                    self.gforth.append("@")
+                    self.gforth.append(self.stack[x - 2].value)
+                else:
+                    print_error("expected another int/real/string", error_type="codegen")
+            elif self.stack[x].type == TYPE_REAL:
+                x += 1
+                if self.stack[x].type == TYPE_INT:  # real int
+                    self.gforth.append(str(self.stack[x - 1].value) + "e0")
+                    self.gforth.append(self.stack[x].value)
+                    self.gforth.append("fswap")
+                    self.gforth.append("s>f")
+                    self.gforth.append(self.realConversions[self.stack[x - 2].value])
+                elif self.stack[x].type == TYPE_REAL:  # real real
+                    self.gforth.append(str(self.stack[x - 1].value) + "e0")
+                    self.gforth.append(str(self.stack[x].value) + "e0")
+                    self.gforth.append(self.realConversions[self.stack[x - 2].value])
+                elif self.stack[x].type == TYPE_ID:
+                    # TODO check if the variable exists
+                    self.gforth.append(self.stack[x - 1].value)  # value
+                    self.gforth.append(self.stack[x].value)  # variable
+                    self.gforth.append("@")
+                    self.gforth.append(self.stack[x - 2].value)
+                else:
+                    print_error("expected another int/real/string", error_type="codegen")
+            elif self.stack[x].type == TYPE_STRING:
+                x += 1
+                if self.stack[x].type == TYPE_STRING:
+                    self.gforth.append('s" ' + self.stack[x - 1].value + '"')
+                    self.gforth.append('s" ' + self.stack[x].value + '"')
+                    if self.stack[x-2].value == "+":
+                        self.gforth.append("s" + self.stack[x - 2].value)
+                    else:
+                        print_error("only string concatenation is supported", error_type="codegen")
+            elif self.stack[x].type == TYPE_ID:
+                self.gforth.append(self.stack[x].value)
+                self.gforth.append("@")
+                x += 1
+                if self.stack[x].type == TYPE_INT:
+                    self.gforth.append(self.stack[x].value)
+                elif self.stack[x].type == TYPE_REAL:
+                    self.gforth.append(self.stack[x].value)
+                x += 1
+                self.gforth.append(self.stack[x-3].value)
+        if self.stack[x].value == R_PAREN:
+            self.gforth.append(R_PAREN)
+            self.scope_stack.pop()
+        return x
+
+    def is_whilestmt(self, x):
+        while_stmts = ''
+        if self.stack[x].value == KEYWORD_WHILE:
+            x += 1
+            if self.stack[x].value == L_PAREN:
+                x += 1
+                if self.stack[x].value in ['<', '>', '=<', '=>', '!', KEYWORD_TRUE, KEYWORD_FALSE]:
+                    x += 1
+                    if self.stack[x].type == TYPE_INT or self.stack[x].type == TYPE_REAL or \
+                                    self.stack[x].type == TYPE_ID:
+                        x += 1
+                        if self.stack[x].type == TYPE_INT or self.stack[x].type == TYPE_REAL or \
+                                        self.stack[x].type == TYPE_ID:
+                            while_stmts = "whilestmts" + str(x - 4)
+                            self.scope_stack.append(while_stmts)
+
+                            temp_stack = []
+                            # self.scope_stack.append(L_PAREN)
+                            temp_stack.append(while_stmts)
+                            temp_stack.append(L_PAREN)  # Because we enter this function at the 'if'
+
+                            self.gforth.append(": " + while_stmts)
+                            self.gforth.append(L_PAREN)
+                            self.gforth.append("BEGIN")
+                            self.gforth.append(self.stack[x - 1].value)  # x
+                            self.gforth.append("@")
+                            self.gforth.append(self.stack[x].value)  # 3
+                            self.gforth.append(self.stack[x - 2].value)  # <
+                            self.gforth.append("while")
+                            x += 1
+
+                            if self.stack[x].value == R_PAREN:
+                                x += 1
+                                stack_val = temp_stack.pop()
+                                if stack_val != L_PAREN:
+                                    print_error("incorrect token", error_type="codegen")
+                                else:
+                                    self.gforth.append(stack_val)
+                                    while self.stack[x].value != R_PAREN:
+                                        x = self.is_while_internals(x)
+                                        self.gforth.append("TYPE ")
+                                    self.gforth.pop()  # remove the last 'type' from gforth
+
+            self.gforth.append("REPEAT")
+            self.gforth.append(";")
+            var = temp_stack.pop()
+            self.gforth.append("\n" + var + "\n")
+        return x
+
+    def is_while_internals(self, x):
+        if self.stack[x].value == L_PAREN:
+            x += 1
+            x = self.is_stdout(x, True)
+            x = self.is_math_expr(x)
+            x = self.is_assign(x)
+
+            x += 1
+            if self.stack[x].value == R_PAREN:
+                x += 1
+                pass
+            else:
+                print_error("missing right paren [a]", error_type='codegen')
+        else:
+            print_error("missing left paren", error_type='codegen')
+        return x
+
+    def is_ifstmt(self, x):
+        if_stmts = ''
+        if self.stack[x].value == KEYWORD_IF:
+            x += 1
+            if self.stack[x].value == L_PAREN:
+                x += 1
+                if self.stack[x].value in ['<', '>', '=<', '=>', '!', KEYWORD_TRUE, KEYWORD_FALSE]:
+                    x += 1
+                    if self.stack[x].type == TYPE_INT or self.stack[x].type == TYPE_REAL or \
+                                    self.stack[x].type == TYPE_ID:
+                        x += 1
+                        if self.stack[x].type == TYPE_INT or self.stack[x].type == TYPE_REAL or \
+                                        self.stack[x].type == TYPE_ID:
+                            if_stmts = "ifloop" + str(x - 4)
+                            self.scope_stack.append(if_stmts)
+
+                            temp_stack = []
+                            # self.scope_stack.append(L_PAREN)
+                            temp_stack.append(if_stmts)# Because we enter this function at the 'if'
+                            temp_stack.append(L_PAREN)
+
+                            self.gforth.append(": " + if_stmts)
+                            self.gforth.append(L_PAREN)
+                            self.gforth.append(self.stack[x - 1].value)  # x
+                            self.gforth.append("@")
+                            self.gforth.append(self.stack[x].value)  # 3
+                            self.gforth.append(self.stack[x - 2].value)  # <
+                            self.gforth.append("if")
+                            x += 1
+
+                            if self.stack[x].value == R_PAREN:
+                                x += 1
+                                stack_val = temp_stack.pop()
+                                if stack_val != L_PAREN:
+                                    print_error("incorrect token", error_type="codegen")
+                                else:
+                                    self.gforth.append(stack_val)
+                                    while self.stack[x].value != R_PAREN:
+                                        x = self.is_if_internals(x)
+                                        self.gforth.append("TYPE else")
+            self.gforth.append("then")
+            self.gforth.append(";")
+            var = temp_stack.pop()
+            self.gforth.append("\n" + var + "\n")
+        return x
+
+    def is_if_internals(self, x):
+        if self.stack[x].value ==L_PAREN:
+            x += 1
+            x = self.is_stdout(x, True)
+            x = self.is_math_expr(x)
+
+            x += 1
+            if self.stack[x].value == R_PAREN:
+                x += 1
+                pass
+            else:
+                print_error("missing right paren [b]", error_type='codegen')
+        else:
+            print_error("missing left paren", error_type='codegen')
+        return x
 
     def get_tokens_stack(self):
         self._get_token_stack(self.tree)
+        self.print_stack()
 
     def _get_token_stack(self, node):
         for child in node.children:
@@ -216,6 +471,6 @@ class CodeGen(object):
             return None
 
     def print_stack(self):
-        print_title("print tree called")
+        print_title("print stack called")
         for token in self.stack:
             print_token(token)

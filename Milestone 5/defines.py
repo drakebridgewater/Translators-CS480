@@ -35,6 +35,7 @@ KEYWORD_IF = 'if'
 KEYWORD_WHILE = 'while'
 KEYWORD_TRUE = "true"
 KEYWORD_FALSE = "false"
+KEYWORD = 'keywords'
 TYPE_BOOL = 'bool'
 TYPE_INT = 'int'
 TYPE_REAL = 'float'
@@ -50,13 +51,21 @@ def print_title(msg):
     print("-" * 40 + "\n" + msg.upper() + "\n" + "-" * 40)
 
 
-def print_token(token, indent = 0):
+def print_token(token, indent=0):
     print("\t" * indent + "[line: " + str(token.line) +
-          ", ID: " + token.type +
-          ", Value: " + str(token.value) + "]")
+          ",\t ID: " + token.type +
+          ",\t Value: " + str(token.value) +
+          # ",\t Siblings: " + str(token.siblings) +
+          "]")
+
+
+def print_log(msg):
+    print(msg)
+    pass
 
 
 class Token:
     type = ''
     value = ''
     line = ''
+    siblings = -1
