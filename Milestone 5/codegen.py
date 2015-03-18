@@ -57,14 +57,18 @@ class CodeGen(object):
     def control(self):
         # TODO as we step through the tree convert and push element on to stack
         self.get_tokens_stack()
-        print_title("CODE_GEN -- in progress")
+        if '-print' in globals()['OPTIONS']:
+            print_title("CODE_GEN -- in progress")
         self.print_stack()
         self.write_out()
         self.gforth = self.rem_sll(self.gforth, L_PAREN)
         self.gforth = self.rem_sll(self.gforth, R_PAREN)
 
-        for x in self.gforth:
-            print(x, end=" ")
+        if 'print' in globals()['OPTIONS']:
+            print_title("gforth code")
+            for x in self.gforth:
+                print(x, end=" ")
+        return self.gforth
 
     def rem_sll(self, L, item):
         answer = []
@@ -78,7 +82,6 @@ class CodeGen(object):
         print(msg)
 
     def write_out(self):
-        print_title("write out called")
         data = self.stack
         prev_was_string = False
         prev_was_real = False
@@ -128,11 +131,13 @@ class CodeGen(object):
                             append_end = False
                             oper_hold = []
                         except IndexError:
-                            print_error("missing left paren", error_type="code_gen")
+                            print_error("missing left paren [d]", error_type="code_gen")
                     elif data[self.pointer].value in ['+', '-', '/', '*', '<', '>', '!', ';', ':', '%', '^']:
                         self.pointer = self.is_math_expr(self.pointer)
                         # self.gforth.append(str(data[self.pointer].value))
                 elif data[self.pointer].type == TYPE_ID:
+                    if self.stack[self.pointer].value not in self.variables:
+                        print_error("variable " + str(self.stack[self.pointer].value) + " not declared before use")
                     if data[self.pointer].value in self.current_scope:
                         pass
                     elif prev_was_declare:
@@ -159,8 +164,9 @@ class CodeGen(object):
                         prev_was_stdout = True
                         pass
                     elif data[self.pointer].value == KEYWORD_LET:  # Declare
-                        prev_was_declare = True
-                        self.gforth.append("variable")
+                        self.pointer = self.is_let(self.pointer)
+                        # prev_was_declare = True
+                        # self.gforth.append("variable")
                         pass
                     elif data[self.pointer].value == KEYWORD_IF:
                         self.pointer = self.is_ifstmt(self.pointer)
@@ -191,9 +197,47 @@ class CodeGen(object):
                 self.pointer += 1
         if len(self.scope_stack) != 0:
             print_error("missing right paren [c]", error_type="code_gen")
-            print(self.scope_stack)
+            if globals()['DEBUG'] == 1:
+                print_title("Scope stack should be empty but has")
+                print(self.scope_stack)
         self.gforth.append("cr cr bye")
-        print("-" * 10)
+
+    def is_let(self, x):
+        temp_scope = []
+        if self.stack[x].value == KEYWORD_LET:
+            x += 1
+            if self.stack[x].value == L_PAREN:  # let *( ( x int) )
+                temp_scope.append(L_PAREN)
+                x +=1
+                while self.stack[x].value == L_PAREN:
+                    temp_scope.append(L_PAREN)
+                    x += 1
+                    self.gforth.append("variable")
+                    if self.stack[x].type == TYPE_ID:
+                        self.gforth.append(self.stack[x].value)
+                        x +=1
+                        if self.stack[x].value == TYPE_REAL:
+                            self.variables.append(self.stack[x-1])
+                            x +=1
+                        elif self.stack[x].value == TYPE_INT:
+                            self.variables.append(self.stack[x-1])
+                            x +=1
+                        elif self.stack[x].value == TYPE_STRING:
+                            self.variables.append(self.stack[x-1])
+                            x +=1
+                        else:
+                            print_error("let statement error", error_type="codegen")
+
+                        if self.stack[x].value == R_PAREN:
+                            x += 1
+                            temp_scope.pop()
+        if self.stack[x].value == R_PAREN:
+            if len(temp_scope) > 0:
+                temp_scope.pop()
+            x+=1
+        if len(temp_scope) != 0:
+            print_error("expected to see final closing bracket on let stmt", error_type="codegen")
+        return x
 
     def is_stdout(self, x, if_stmts=False):
         if self.stack[x].value == KEYWORD_STDOUT:
@@ -236,13 +280,19 @@ class CodeGen(object):
                     self.gforth.append(oper_hold)  # append ID
                 elif self.stack[x].type == TYPE_STRING:
                     self.gforth.append('s" ' + self.stack[x - 1].value + '"')
+                    self.gforth.append(self.stack[x - 1].value)
                 elif self.stack[x].type == TYPE_INT:
                     self.gforth.append(str(self.stack[x].value))
+                    self.gforth.append(self.stack[x - 1].value)
                 elif self.stack[x].type == TYPE_REAL:
                     self.gforth.append(str(self.stack[x].value) + "e0")
+                    self.gforth.append(self.stack[x - 1].value)
+                elif self.stack[x].type == TYPE_ID:
+                    self.gforth.append(str(self.stack[x].value))
+                    self.gforth.append(self.stack[x - 1].value)
                 else:
                     print_error("in assignment missing value", error_type="codegen")
-                self.gforth.append(self.stack[x - 1].value)
+
                 self.gforth.append("!")
                 if oper_hold != '':
                     self.gforth.append(oper_hold)
@@ -267,6 +317,8 @@ class CodeGen(object):
                 elif self.stack[x].type == TYPE_ID:
                     # TODO check if the variable exists
                     self.gforth.append(self.stack[x - 1].value)  # value
+                    if self.stack[x].value not in self.variables:
+                        print_error("variable " + str(self.stack[x].value) + " not declared before use")
                     self.gforth.append(self.stack[x].value)  # variable
                     self.gforth.append("@")
                     self.gforth.append(self.stack[x - 2].value)
@@ -287,6 +339,8 @@ class CodeGen(object):
                 elif self.stack[x].type == TYPE_ID:
                     # TODO check if the variable exists
                     self.gforth.append(self.stack[x - 1].value)  # value
+                    if self.stack[x].value not in self.variables:
+                        print_error("variable " + str(self.stack[x].value) + " not declared before use")
                     self.gforth.append(self.stack[x].value)  # variable
                     self.gforth.append("@")
                     self.gforth.append(self.stack[x - 2].value)
@@ -302,6 +356,8 @@ class CodeGen(object):
                     else:
                         print_error("only string concatenation is supported", error_type="codegen")
             elif self.stack[x].type == TYPE_ID:
+                if self.stack[x].value not in self.variables:
+                    print_error("variable " + str(self.stack[x].value) + " not declared before use")
                 self.gforth.append(self.stack[x].value)
                 self.gforth.append("@")
                 x += 1
@@ -330,24 +386,31 @@ class CodeGen(object):
                         if self.stack[x].type == TYPE_INT or self.stack[x].type == TYPE_REAL or \
                                         self.stack[x].type == TYPE_ID:
                             while_stmts = "whilestmts" + str(x - 4)
+                            self.scope_stack.append(L_PAREN)
                             self.scope_stack.append(while_stmts)
 
                             temp_stack = []
                             # self.scope_stack.append(L_PAREN)
                             temp_stack.append(while_stmts)
-                            temp_stack.append(L_PAREN)  # Because we enter this function at the 'if'
+                            temp_stack.append(L_PAREN)
+                            self.scope_stack.append(L_PAREN)  # Because we enter this function at the 'if'
 
                             self.gforth.append(": " + while_stmts)
                             self.gforth.append(L_PAREN)
                             self.gforth.append("BEGIN")
+                            if self.stack[x-1].type == TYPE_ID and self.stack[x-1].value not in self.variables:
+                                print_error("variable " + str(self.stack[x-1].value) + " not declared before use")
                             self.gforth.append(self.stack[x - 1].value)  # x
                             self.gforth.append("@")
+                            if self.stack[x].type == TYPE_ID and self.stack[x].value not in self.variables:
+                                print_error("variable " + str(self.stack[x].value) + " not declared before use")
                             self.gforth.append(self.stack[x].value)  # 3
                             self.gforth.append(self.stack[x - 2].value)  # <
                             self.gforth.append("while")
                             x += 1
 
                             if self.stack[x].value == R_PAREN:
+                                self.scope_stack.pop()
                                 x += 1
                                 stack_val = temp_stack.pop()
                                 if stack_val != L_PAREN:
@@ -355,8 +418,13 @@ class CodeGen(object):
                                 else:
                                     self.gforth.append(stack_val)
                                     while self.stack[x].value != R_PAREN:
-                                        x = self.is_while_internals(x)
+                                        temp = self.is_while_internals(x)
+                                        if temp == -1:
+                                            break
+                                        else:
+                                            x = temp
                                         self.gforth.append("TYPE ")
+                                    self.scope_stack.pop()
                                     self.gforth.pop()  # remove the last 'type' from gforth
 
             self.gforth.append("REPEAT")
@@ -375,11 +443,9 @@ class CodeGen(object):
             x += 1
             if self.stack[x].value == R_PAREN:
                 x += 1
-                pass
-            else:
-                print_error("missing right paren [a]", error_type='codegen')
         else:
-            print_error("missing left paren", error_type='codegen')
+            print_error("missing left paren [e]", error_type='codegen')
+            return -1
         return x
 
     def is_ifstmt(self, x):
@@ -405,8 +471,12 @@ class CodeGen(object):
 
                             self.gforth.append(": " + if_stmts)
                             self.gforth.append(L_PAREN)
+                            if self.stack[x-1].type == TYPE_ID and self.stack[x-1].value not in self.variables:
+                                print_error("variable " + str(self.stack[x-1].value) + " not declared before use")
                             self.gforth.append(self.stack[x - 1].value)  # x
                             self.gforth.append("@")
+                            if self.stack[x].type == TYPE_ID and self.stack[x].value not in self.variables:
+                                print_error("variable " + str(self.stack[x].value) + " not declared before use")
                             self.gforth.append(self.stack[x].value)  # 3
                             self.gforth.append(self.stack[x - 2].value)  # <
                             self.gforth.append("if")
@@ -422,6 +492,7 @@ class CodeGen(object):
                                     while self.stack[x].value != R_PAREN:
                                         x = self.is_if_internals(x)
                                         self.gforth.append("TYPE else")
+                                    self.scope_stack.pop()
             self.gforth.append("then")
             self.gforth.append(";")
             var = temp_stack.pop()
@@ -471,6 +542,7 @@ class CodeGen(object):
             return None
 
     def print_stack(self):
-        print_title("print stack called")
-        for token in self.stack:
-            print_token(token)
+        if globals()['DEBUG'] == 1:
+            print_title("print stack called")
+            for token in self.stack:
+                print_token(token)

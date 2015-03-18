@@ -1,46 +1,217 @@
-New Node: root
-NN Str: []
-------------------------------
-NN Str: S
-New Node: (
-NN Str: S"
-NN Str: S
-NN Str: expr
-NN Str: oper
-NN Str: constant
-NN Str: string
-NN Str: int
-NN Str: S'
-NN Str: S
-NN Str: expr
-NN Str: oper
-NN Str: constant
-NN Str: string
-NN Str: int
-NN Str: float
-NN Str: name
-PARSE ERROR: [line: 1] missing left paren constant or name
-NN Str: stmts
-NN Str: ifstmts
-PARSE ERROR: [line: 1] missing left paren in if statment
-NN Str: whilestmts
-PARSE ERROR: [line: 1] missing left paren
-NN Str: letstmts
-PARSE ERROR: [line: 1] missing left paren
-NN Str: printstmts
-PARSE ERROR: [line: 1] missing left paren
-PARSE ERROR: [line: 1] missing if, while, let or print statment
-ERROR
+--------------------------------------------------------------------------------
 ----------------------------------------
-	 print tree called
-	S
-		[line: 1, ID: ops, Value: (]
-		S"
-			S
-				expr
-					oper
-						constant
-							int
-								[line: 1, ID: int, Value: 1]
-				S'
-					S
+IBTL FILE: TEST1
+----------------------------------------
+
+ input: parsing test1
+
+(
+    ( let ( ( x int ) ) )
+    ( := x 10 )
+    ( stdout ( - 20 x ) )
+
+    ( if ( > x 1 )
+        ( stdout "yes1" )
+    )
+    ( if ( < x 2 )
+        ( stdout  ( + "yes2" " true" ) )
+        ( stdout ( + "no2" " true" ) )
+    )
+    ( if ( < x 3 )
+        ( stdout  ( + "yes3" " true" ) )
+        ( stdout ( + "no3" " true" ) )
+    )
+    ( if ( < x 4 )
+        ( stdout "yes4" )
+    )
+    ( := x 15 )
+    ( while ( > x 5 )
+        ( stdout "hello5" )
+        ( := x ( - x 1 ) )
+    )
+    ( if ( > x 6 )
+        ( stdout "yes6" )
+    )
+)
+GENERAL ERROR: [line: NA] variable x not declared before use
+GENERAL ERROR: [line: NA] variable x not declared before use
+GENERAL ERROR: [line: NA] variable x not declared before use
+GENERAL ERROR: [line: NA] variable x not declared before use
+GENERAL ERROR: [line: NA] variable x not declared before use
+GENERAL ERROR: [line: NA] variable x not declared before use
+GENERAL ERROR: [line: NA] variable x not declared before use
+GENERAL ERROR: [line: NA] variable x not declared before use
+CODE_GEN ERROR: [line: NA] missing right paren [c]
+----------------------------------------
+GFORTH CODE
+----------------------------------------
+variable x 10 x ! 
+ 20 x @ - . 
+ : ifloop24 x @ 1 > if s" yes1" TYPE else then ; 
+ifloop24
+ : ifloop36 x @ 2 < if s" yes2" s"  true" s+ TYPE else s" no2" s"  true" s+ TYPE else then ; 
+ifloop36
+ : ifloop60 x @ 3 < if s" yes3" s"  true" s+ TYPE else s" no3" s"  true" s+ TYPE else then ; 
+ifloop60
+ : ifloop84 x @ 4 < if s" yes4" TYPE else then ; 
+ifloop84
+ 15 x ! 
+ : whilestmts101 BEGIN x @ 5 > while s" hello5" TYPE  x @ 1 - x ! x @ TYPE  TYPE  x @ 6 > TYPE  s" yes6" REPEAT ; 
+whilestmts101
+ 
+ cr cr bye 
+
+
+gforth code in:  test1.out.fs
+--------------------------------------------------------------------------------
+----------------------------------------
+IBTL FILE: TEST2
+----------------------------------------
+
+ input: parsing test2
+(
+( + "abc" "def")
+( + 6.1 7 )
+( - 6 7 )
+( * 6.1 7 )
+
+( + 1.1 ( + 5 4 ) )
+( - 2.2 3 )
+( * 3 4.4 )
+( / 4 9 )
+
+( + 10 2 )
+( - 20 3 )
+( * 30 4 )
+( / 40 4 )
+)
+
+(
+    ( let ( ( x int ) ) )
+    ( := x 10.0 )
+    ( stdout ( - 20 x ) )
+
+    ( if ( > x 3 )
+        ( stdout "yes" )
+    )
+    ( if ( < x 3 )
+        ( stdout  ( + "yes" " true" ) )
+        ( stdout ( + "no" " true" ) )
+    )
+    ( while ( > x 5 )
+        ( stdout "hello" )
+        ( := x ( - x 1 ) )
+    )
+)
+CODE_GEN ERROR: [line: NA] missing right paren [c]
+----------------------------------------
+GFORTH CODE
+----------------------------------------
+s" abc" s" def" s+ 
+ cr cr bye 
+
+
+gforth code in:  test2.out.fs
+--------------------------------------------------------------------------------
+----------------------------------------
+IBTL FILE: TEST3
+----------------------------------------
+
+ input: parsing test3
+(
+( let  ( x int )  )
+( while ( > x 5 )
+    ( stdout "hello" )
+    ( := x ( - x 1 ) ) )
+( stdout ( - 20 x  ) )
+( if ( > x 3.4 )
+    ( stdout "yes" ) )
+( if ( < x 3 )
+    ( stdout ( + "yes" " true" ) )
+    ( stdout ( + "no" " true" ) ) )
+)
+PARSER ERROR: [line: NA] missing right paren in let statement
+CODE_GEN ERROR: [line: NA] missing right paren [c]
+----------------------------------------
+GFORTH CODE
+----------------------------------------
+cr cr bye 
+
+
+gforth code in:  test3.out.fs
+--------------------------------------------------------------------------------
+----------------------------------------
+IBTL FILE: PROFTEST_ADDED_SPACES
+----------------------------------------
+
+ input: parsing proftest_added_spaces
+(
+   ( let ( ( n int ) ( a real ) ( b real )
+        ( area real ) ( width real ) ( x real ) ) )
+   
+   ( := n 100 )
+   ( := a 0 )
+   ( := b 1 )
+   ( := area 0 )
+   ( := x a )
+   ( := width ( / ( - b a ) n ) )
+   
+   ( while ( < x b )
+      ( := area ( + area ( * ( ^ x 2 ) width ) ) )
+      ( := x ( + x width ) )
+   )
+
+   ( stdout area )
+)
+
+GENERAL ERROR: [line: NA] variable n not declared before use
+CODEGEN ERROR: [line: NA] unassigned variable n
+GENERAL ERROR: [line: NA] variable a not declared before use
+CODEGEN ERROR: [line: NA] unassigned variable a
+GENERAL ERROR: [line: NA] variable b not declared before use
+CODEGEN ERROR: [line: NA] unassigned variable b
+GENERAL ERROR: [line: NA] variable area not declared before use
+CODEGEN ERROR: [line: NA] unassigned variable area
+GENERAL ERROR: [line: NA] variable x not declared before use
+CODEGEN ERROR: [line: NA] unassigned variable x
+GENERAL ERROR: [line: NA] variable a not declared before use
+CODEGEN ERROR: [line: NA] unassigned variable a
+GENERAL ERROR: [line: NA] variable width not declared before use
+CODEGEN ERROR: [line: NA] unassigned variable width
+GENERAL ERROR: [line: NA] variable b not declared before use
+GENERAL ERROR: [line: NA] variable n not declared before use
+CODEGEN ERROR: [line: NA] unassigned variable n
+GENERAL ERROR: [line: NA] variable x not declared before use
+GENERAL ERROR: [line: NA] variable b not declared before use
+GENERAL ERROR: [line: NA] variable area not declared before use
+GENERAL ERROR: [line: NA] variable x not declared before use
+CODEGEN ERROR: [line: NA] missing left paren [e]
+CODE_GEN ERROR: [line: NA] missing left paren [d]
+GENERAL ERROR: [line: NA] variable x not declared before use
+CODEGEN ERROR: [line: NA] unassigned variable x
+GENERAL ERROR: [line: NA] variable x not declared before use
+CODE_GEN ERROR: [line: NA] missing left paren [d]
+CODE_GEN ERROR: [line: NA] missing left paren [d]
+----------------------------------------
+GFORTH CODE
+----------------------------------------
+variable n variable a variable b variable area variable width variable x n 100 
+ a 0 
+ b 1 
+ area 0 
+ x a 
+ width b @ - n 
+ 
+ : whilestmts69 BEGIN x @ b < while area @ + area ! area @ TYPE  x @ 2 ^ REPEAT ; 
+whilestmts69
+ 
+ 
+ 
+ x x @ + 
+ 
+ 
+ 
+ cr cr bye 
+
+
+gforth code in:  proftest_added_spaces.out.fs

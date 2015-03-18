@@ -3,7 +3,7 @@ TARGET=example
 HTML=main_html
 SRC=tree.py
 
-default: compile pdf clean stutest.out
+default: compile pdf clean stutest
 
 both: pdf html
 
@@ -59,16 +59,19 @@ clean:
 # Stutest.out
 ##=============================================================================
 
-stutest.out:
-	echo 'Running stutest.in and storing int stutest.out'
-	python3 main.py test1 > stutest.out
+stutest:
+	echo 'Running stutest.in and storing in stutest.out'
+	python3 main.py -input -print test1 > stutest.out
+	python3 main.py -input -print test2 >> stutest.out
+	python3 main.py -input -print test3 >> stutest.out
+	python3 main.py -input -print proftest_added_spaces >> stutest.out
 
 	
 ##=============================================================================
 # Proftest.out
 ##=============================================================================
 
-proftest.out:
+proftest:
 	echo 'Running proftest.in and storing in proftest.out'
-	python3 main.py proftest.in > proftest.out
-
+	python3 main.py -input -print proftest.in > proftest.out
+	gforth proftest.out.fs

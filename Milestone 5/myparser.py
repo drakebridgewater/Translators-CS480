@@ -20,15 +20,13 @@ class Node(object):
         return True
 
     def print_tree(self):
-        print_title("print tree")
-        # print(self.data)
-        self.print_tree_helper(self)
+        if globals()['DEBUG'] == 1 or 'tree' in globals()['OPTIONS']:
+            print_title("print tree")
+            self.print_tree_helper(self)
 
     def print_tree_helper(self, node, indent=0):
         indent += 1
         for child in node.children:
-            # if child.get_child_count() > 0:
-            # if child.data is not None:
             if hasattr(child, "data"):
                 if hasattr(child.data, "value"):
                     print_token(child.data, indent)
@@ -49,8 +47,9 @@ class Node(object):
                 # print("Failed")
 
     def print_postordered_tree(self):
-        print_title("post ordered tree ")
-        self.post_order_tree_print(self)
+        if globals()['DEBUG'] == 1 or 'postorder' in globals()['OPTIONS']:
+            print_title("post ordered tree ")
+            self.post_order_tree_print(self)
 
     def post_order_tree_print(self, node):
         for child in node.children:
@@ -86,12 +85,9 @@ class MyParser(object):
         self.line = 1
         self.epsilon_flag = 0
 
-    # def exit(self):
-    #     self.tree.print_tree()
-    #     exit()
-
     def parse_error(self, msg=''):
-        print_error(msg, self.line, "parse")
+        if 'parse' in globals()['OPTIONS']:
+            print_error(msg, self.line, "parse")
 
     # Function Description:
     # will return a single token as the lexer may spit out multiple
@@ -122,7 +118,8 @@ class MyParser(object):
     def control(self):
         try:
             self.lexer.open_file()
-            print_title("lexer output")
+            if '-lexer' in globals()["OPTIONS"]:
+                print_title("lexer output")
             # while self.current_state:
             self.tree.add_child(self.t())
             # globals()['current_token_index'] += 1
@@ -553,11 +550,8 @@ class MyParser(object):
         if new_node.add_child(self.is_value(self.get_token(), KEYWORD_LET)):
             if new_node.add_child(self.is_value(self.get_token(), L_PAREN)):
                 if new_node.add_child(self.varlist()):
-                    pass
-                else:
-                    globals()["current_token_index"] = save
-                    return None
-                if new_node.add_child(self.is_value(self.get_token(), R_PAREN)):
+                    new_node.add_child((self.is_value(self.get_token(), R_PAREN)))
+                elif new_node.add_child(self.is_value(self.get_token(), R_PAREN)):
                     pass
                 else:
                     globals()["current_token_index"] = save
@@ -610,7 +604,7 @@ class MyParser(object):
             pass
         elif new_node.add_child(self.is_value(self.get_token(), "int")):
             pass
-        elif new_node.add_child(self.is_value(self.get_token(), "float")):
+        elif new_node.add_child(self.is_value(self.get_token(), "real")):
             pass
         elif new_node.add_child(self.is_value(self.get_token(), "string")):
             pass

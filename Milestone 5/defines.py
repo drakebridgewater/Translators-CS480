@@ -1,7 +1,11 @@
 __author__ = 'Drake'
 
 files = []
-options = []
+global OPTIONS
+globals()["OPTIONS"] = ['lexer', 'print', 'postorder', 'tree', 'debug']
+
+global DEBUG
+globals()["DEBUG"] = 0
 
 if not 'current_token_index' in globals():
     current_token_index = 0
@@ -38,7 +42,7 @@ KEYWORD_FALSE = "false"
 KEYWORD = 'keywords'
 TYPE_BOOL = 'bool'
 TYPE_INT = 'int'
-TYPE_REAL = 'float'
+TYPE_REAL = 'real'
 TYPE_STRING = 'string'
 TYPE_ID = 'ID'
 
@@ -60,8 +64,8 @@ def print_token(token, indent=0):
 
 
 def print_log(msg):
-    print(msg)
-    pass
+    if 'lexer' in globals()['OPTIONS']:
+        print(msg)
 
 
 class Token:
