@@ -1,6 +1,10 @@
 
 (
 	( + 6 7 )
+    ( * 2 11 )
+    ( % 5 8 )
+    ( - 4 9 )
+    ( / 10 2 )
     ( let ( ( x int ) ) )
     ( := x 10 )
     ( stdout ( - 20 x ) )
@@ -27,4 +31,21 @@
     ( if ( > x 6 )
         ( stdout "yes6" )
     )
+
+    ( let ( ( n int ) ( a real ) ( b real )
+    ( area real ) ( width real ) ( x real ) ) )
+
+    ( := n 100 )
+    ( := a 0 )
+    ( := b 1 )
+    ( := area 0 )
+    ( := x a )
+    ( := width ( / ( - b a ) n ) )
+
+    ( while ( < x b )
+      ( := area ( + area ( * ( ^ x 2 ) width ) ) )
+      ( := x ( + x width ) )
+    )
+
+    ( stdout area )
 )

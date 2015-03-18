@@ -122,7 +122,7 @@ class CodeGen(object):
                     elif prev_was_string:
                         convert = True
                         append_end = True
-                    self.gforth.append('" ' + str(data[x].value) + '"')
+                    self.gforth.append('s" ' + str(data[x].value) + '"')
                 elif data[x].type is TYPE_INT:
                     if not prev_was_int:
                         prev_was_int = True
@@ -153,7 +153,8 @@ class CodeGen(object):
                         print_error("missing left paren", error_type="code_gen")
                 else:
                     print_error("unrecognized symbol " + str(data[x].value), error_type="codegen")
-
+                # TODO for / 4 9.8 --> 4 9.8 s>f fswap f/
+                # TODO same for subtraction
                 if convert:
                     if prev_was_string:
                         oper_hold = 's+'
