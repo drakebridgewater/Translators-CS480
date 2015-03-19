@@ -83,27 +83,10 @@ class CodeGen(object):
 
     def write_out(self):
         data = self.stack
-        prev_was_string = False
-        prev_was_real = False
-        prev_was_int = False
-        prev_was_assign = False
-        prev_was_var = False
-        prev_was_if = False
         prev_was_declare = False
-        prev_was_stdout = False
-        append_end = False
-        oper_hold = []
 
         while self.pointer <= len(self.stack) - 1:
             try:
-                convert = False
-
-                if prev_was_real:
-                    if data[self.pointer].value in self.realConversions:
-                        oper_hold.append(self.realConversions[data[self.pointer].value])
-                    if data[self.pointer].type == TYPE_INT:
-                        convert = True
-
                 if data[self.pointer].type == 'ops':
                     if data[self.pointer].value is L_PAREN:
                         self.gforth.append(L_PAREN)
@@ -120,21 +103,13 @@ class CodeGen(object):
                             if 'ifloop' in pop_value:
                                 temp = pop_value.split("ifloop")
                                 self.gforth.append("ifloop" + temp[len(temp) - 1] + "\n")
-                                prev_was_if = False
-                            prev_was_string = False
-                            prev_was_real = False
-                            prev_was_int = False
-                            prev_was_assign = False
-                            prev_was_var = False
                             prev_was_declare = False
-                            prev_was_stdout = False
-                            append_end = False
                             oper_hold = []
                         except IndexError:
                             print_error("missing left paren [d]", error_type="code_gen")
                     elif data[self.pointer].value in ['+', '-', '/', '*', '<', '>', '!', ';', ':', '%', '^']:
-                        self.pointer = self.is_math_expr(self.pointer)
-                        # self.gforth.append(str(data[self.pointer].value))
+                        self.pointer, gcode, expr_type = self.is_math_expr(self.pointer)
+                        self.gforth.append(gcode)
                 elif data[self.pointer].type == TYPE_ID:
                     if self.stack[self.pointer].value not in self.variables:
                         print_error("variable " + str(self.stack[self.pointer].value) + " not declared before use")
@@ -145,54 +120,27 @@ class CodeGen(object):
                             print_error("redecloration of variable " + str(data[self.pointer].value),
                                         error_type="codegen")
                         self.current_scope.append(data[self.pointer].value)
-                        # oper_hold = str(data[self.pointer].value)
                     else:
                         print_error("unassigned variable " + str(data[self.pointer].value), error_type="codegen")
                     self.gforth.append(str(data[self.pointer].value))
-                    if prev_was_assign:
-                        self.gforth.append("!")
-                        # oper_hold.append(str(data[self.pointer].value))
-                        # oper_hold.append('!')
-                        # self.variables.append(data[self.pointer].value)
 
                 elif data[self.pointer].type == 'keywords':
                     if data[self.pointer].value == OPER_ASSIGN:  # :=
                         self.pointer = self.is_assign(self.pointer)
-                        prev_was_assign = True
                     elif data[self.pointer].value == KEYWORD_STDOUT:
                         self.pointer = self.is_stdout(self.pointer)
-                        prev_was_stdout = True
-                        pass
                     elif data[self.pointer].value == KEYWORD_LET:  # Declare
                         self.pointer = self.is_let(self.pointer)
-                        # prev_was_declare = True
-                        # self.gforth.append("variable")
-                        pass
                     elif data[self.pointer].value == KEYWORD_IF:
                         self.pointer = self.is_ifstmt(self.pointer)
-                        # if_stmts = "ifloop" + str(self.pointer)
-                        # self.scope_stack.append(if_stmts)
-                        # self.gforth.append(" : " + if_stmts)
                     elif data[self.pointer].value == KEYWORD_WHILE:
                         self.pointer = self.is_whilestmt(self.pointer)
-                        # while_stmts = "whileloop" + str(self.pointer)
-                        # self.scope_stack.append(while_stmts)
-                        # self.gforth.append(" : " + while_stmts)
                 elif data[self.pointer].type == TYPE_STRING:  # An actual string
                     self.gforth.append('s" ' + str(data[self.pointer].value) + '"')
                 elif data[self.pointer].type == TYPE_INT:
-                    prev_was_int = True
                     self.gforth.append(str(data[self.pointer].value))
-                    pass
                 elif data[self.pointer].type == TYPE_REAL:
-                    prev_was_real = True
                     self.gforth.append(str(data[self.pointer].value) + "e0")
-                    pass
-
-                if append_end:
-                    for op in oper_hold:
-                        self.gforth.append(op)
-
             finally:
                 self.pointer += 1
         if len(self.scope_stack) != 0:
@@ -208,33 +156,37 @@ class CodeGen(object):
             x += 1
             if self.stack[x].value == L_PAREN:  # let *( ( x int) )
                 temp_scope.append(L_PAREN)
-                x +=1
+                x += 1
                 while self.stack[x].value == L_PAREN:
                     temp_scope.append(L_PAREN)
                     x += 1
-                    self.gforth.append("variable")
+                    # self.gforth.append("variable")
                     if self.stack[x].type == TYPE_ID:
-                        self.gforth.append(self.stack[x].value)
-                        x +=1
+                        var_hold_x = x
+                        x += 1
                         if self.stack[x].value == TYPE_REAL:
-                            self.variables.append(self.stack[x-1])
-                            x +=1
+                            self.variables.append((self.stack[x - 1], TYPE_REAL))
+                            self.gforth.append("fvariable")
+                            x += 1
                         elif self.stack[x].value == TYPE_INT:
-                            self.variables.append(self.stack[x-1])
-                            x +=1
+                            self.variables.append((self.stack[x - 1], TYPE_INT))
+                            self.gforth.append("variable")
+                            x += 1
                         elif self.stack[x].value == TYPE_STRING:
-                            self.variables.append(self.stack[x-1])
-                            x +=1
+                            self.variables.append((self.stack[x - 1], TYPE_STRING))
+                            self.gforth.append("variable")
+                            x += 1
                         else:
                             print_error("let statement error", error_type="codegen")
-
+                        self.gforth.append(self.stack[var_hold_x].value)
                         if self.stack[x].value == R_PAREN:
                             x += 1
                             temp_scope.pop()
+                            self.gforth.append("\n")
         if self.stack[x].value == R_PAREN:
             if len(temp_scope) > 0:
                 temp_scope.pop()
-            x+=1
+            x += 1
         if len(temp_scope) != 0:
             print_error("expected to see final closing bracket on let stmt", error_type="codegen")
         return x
@@ -245,7 +197,8 @@ class CodeGen(object):
             if self.stack[x].value == L_PAREN:
                 self.gforth.append(L_PAREN)
                 x += 1
-                x = self.is_math_expr(x)
+                x, gcode, expr_type = self.is_math_expr(x)
+                self.gforth.append(gcode)
                 if not if_stmts:
                     self.gforth.append(".")
                 x += 1
@@ -270,11 +223,12 @@ class CodeGen(object):
         if self.stack[x].value == OPER_ASSIGN:
             x += 1
             if self.stack[x].type == TYPE_ID:
+                oper_hold = self.stack[x].value
                 x += 1
                 if self.stack[x].value == L_PAREN:
-                    oper_hold = self.stack[x-1].value
                     x += 1
-                    x = self.is_math_expr(x)
+                    x, gcode, expr_type = self.is_math_expr(x)
+                    self.gforth.append(gcode)
                     if self.stack[x].value == R_PAREN:
                         x += 1
                     self.gforth.append(oper_hold)  # append ID
@@ -293,14 +247,102 @@ class CodeGen(object):
                 else:
                     print_error("in assignment missing value", error_type="codegen")
 
-                self.gforth.append("!")
-                if oper_hold != '':
-                    self.gforth.append(oper_hold)
-                    self.gforth.append("@")
+        self.gforth.append("!")
+        if oper_hold != '':
+            self.gforth.append(oper_hold)
+            self.gforth.append("@")
+            self.gforth.append("\n")
+        if self.stack[x].value == R_PAREN:
+            x += 1
         return x
 
     def is_math_expr(self, x):
-        if self.stack[x].value in ['+', '-', '/', '*', '<', '>', '!', ';', ':', '%', '^']:
+        oper = ''
+        expr1 = ''
+        expr2 = ''
+        expr1_type = ''
+        expr2_type = ''
+        expr_type = ''
+
+        if self.stack[x].value in ['+', '-', '/', '*', '<', '>', '!', '%', '^']:
+            oper = self.stack[x].value
+            x += 1
+
+            # EXPR 1
+            if self.stack[x].type == TYPE_INT:
+                expr1 = self.stack[x].value
+                expr1_type = TYPE_INT
+                x += 1
+            elif self.stack[x].type == TYPE_REAL:
+                expr1 = self.stack[x].value
+                expr1_type = TYPE_REAL
+                x += 1
+            elif self.stack[x].type == TYPE_STRING:
+                expr1 = self.stack[x].value
+                expr1_type = TYPE_STRING
+                x += 1
+            elif self.stack[x].type == TYPE_ID:
+                expr1 = self.stack[x].value
+                x += 1
+            elif self.stack[x].value == L_PAREN:
+                # expecting another math expression
+                x += 1
+                x, expr1, expr1_type = self.is_math_expr(x)
+                if self.stack[x].value == R_PAREN:
+                    x+=1
+                else:
+                    print_error("missing right paren after expression", error_type="codegem")
+            else:
+                print_error("error interpreting expr 1", error_type="codegen")
+
+
+            # EXPR 2
+            if self.stack[x].type == TYPE_INT:
+                expr2 = self.stack[x].value
+                expr2_type = TYPE_INT
+                x += 1
+            elif self.stack[x].type == TYPE_REAL:
+                expr2 = self.stack[x].value
+                expr2_type = TYPE_REAL
+            elif self.stack[x].type == TYPE_STRING:
+                expr2 = self.stack[x].value
+                expr2_type = TYPE_STRING
+                x += 1
+            elif self.stack[x].type == TYPE_ID:
+                expr2 = self.stack[x].value
+                x += 1
+            elif self.stack[x].value == L_PAREN:
+                # expecting another math expression
+                x += 1
+                x, expr2, expr2_type = self.is_math_expr(x)
+                if self.stack[x].value == R_PAREN:
+                    x+=1
+                else:
+                    print_error("missing right paren after expression", error_type="codegem")
+            else:
+                print_error("error interpreting expr 2", error_type="codegen")
+
+            if self.stack[x].value == R_PAREN:
+                x += 1
+            else:
+                print_error("closing paren expected after math expression", error_type="codegen")
+
+        # if expr1_type == TYPE_REAL and expr2_type == TYPE_REAL:
+        # expr_type = TYPE_REAL
+        # elif expr1_type == TYPE_REAL and expr2_type == TYPE_INT:
+        #     expr_type = TYPE_REAL
+        # elif expr1_type == TYPE_INT and expr2_type == TYPE_INT:
+        #     expr_type = TYPE_INT
+        # elif expr1_type == TYPE_INT and expr2_type == TYPE_REAL:
+        #     expr_type = TYPE_REAL
+        # else:
+        #     print_error("un-recognizable types", error_type="codegen")
+
+        code = str(expr1) + " " + str(expr2) + " " + str(oper)
+        return x, code, expr_type
+
+    def is_math_expr2(self, x):
+        if self.stack[x].value in ['+', '-', '/', '*', '<', '>', '!', '%', '^']:
             x += 1
             if self.stack[x].type == TYPE_INT:
                 x += 1
@@ -351,7 +393,7 @@ class CodeGen(object):
                 if self.stack[x].type == TYPE_STRING:
                     self.gforth.append('s" ' + self.stack[x - 1].value + '"')
                     self.gforth.append('s" ' + self.stack[x].value + '"')
-                    if self.stack[x-2].value == "+":
+                    if self.stack[x - 2].value == "+":
                         self.gforth.append("s" + self.stack[x - 2].value)
                     else:
                         print_error("only string concatenation is supported", error_type="codegen")
@@ -366,7 +408,13 @@ class CodeGen(object):
                 elif self.stack[x].type == TYPE_REAL:
                     self.gforth.append(self.stack[x].value)
                 x += 1
-                self.gforth.append(self.stack[x-3].value)
+                self.gforth.append(self.stack[x - 3].value)
+            elif self.stack[x].value == L_PAREN:
+                temp_x = x
+                x = self.is_math_expr(x)
+                x = self.is_math_expr(x)
+                self.gforth.append(self.stack[temp_x].value)
+
         if self.stack[x].value == R_PAREN:
             self.gforth.append(R_PAREN)
             self.scope_stack.pop()
@@ -398,8 +446,8 @@ class CodeGen(object):
                             self.gforth.append(": " + while_stmts)
                             self.gforth.append(L_PAREN)
                             self.gforth.append("BEGIN")
-                            if self.stack[x-1].type == TYPE_ID and self.stack[x-1].value not in self.variables:
-                                print_error("variable " + str(self.stack[x-1].value) + " not declared before use")
+                            if self.stack[x - 1].type == TYPE_ID and self.stack[x - 1].value not in self.variables:
+                                print_error("variable " + str(self.stack[x - 1].value) + " not declared before use")
                             self.gforth.append(self.stack[x - 1].value)  # x
                             self.gforth.append("@")
                             if self.stack[x].type == TYPE_ID and self.stack[x].value not in self.variables:
@@ -437,7 +485,8 @@ class CodeGen(object):
         if self.stack[x].value == L_PAREN:
             x += 1
             x = self.is_stdout(x, True)
-            x = self.is_math_expr(x)
+            x, gcode, expr_type = self.is_math_expr(x)
+            self.gforth.append(gcode)
             x = self.is_assign(x)
 
             x += 1
@@ -466,13 +515,13 @@ class CodeGen(object):
 
                             temp_stack = []
                             # self.scope_stack.append(L_PAREN)
-                            temp_stack.append(if_stmts)# Because we enter this function at the 'if'
+                            temp_stack.append(if_stmts)  # Because we enter this function at the 'if'
                             temp_stack.append(L_PAREN)
 
                             self.gforth.append(": " + if_stmts)
                             self.gforth.append(L_PAREN)
-                            if self.stack[x-1].type == TYPE_ID and self.stack[x-1].value not in self.variables:
-                                print_error("variable " + str(self.stack[x-1].value) + " not declared before use")
+                            if self.stack[x - 1].type == TYPE_ID and self.stack[x - 1].value not in self.variables:
+                                print_error("variable " + str(self.stack[x - 1].value) + " not declared before use")
                             self.gforth.append(self.stack[x - 1].value)  # x
                             self.gforth.append("@")
                             if self.stack[x].type == TYPE_ID and self.stack[x].value not in self.variables:
@@ -500,10 +549,11 @@ class CodeGen(object):
         return x
 
     def is_if_internals(self, x):
-        if self.stack[x].value ==L_PAREN:
+        if self.stack[x].value == L_PAREN:
             x += 1
             x = self.is_stdout(x, True)
-            x = self.is_math_expr(x)
+            x, gcode, expr_type = self.is_math_expr(x)
+            self.gforth.append(gcode)
 
             x += 1
             if self.stack[x].value == R_PAREN:

@@ -5,10 +5,13 @@ from defines import *
 
 class Node(object):
     def __init__(self, data):
-        # if hasattr(data, "value"):
-        # print("New Node: " + str(data.value))
-        # else:
-        # print("NN Str: " + str(data))
+        print("-"*20)
+        if hasattr(data, 'line'):
+            print("New Node: ")
+            print_token(data)
+        else:
+            print("NN Str: ")
+            print(data)
         self.data = data
         self.children = []
         self.depth = 0
@@ -176,10 +179,10 @@ class MyParser(object):
         if new_node.add_child(self.is_value(self.get_token(), L_PAREN)) \
                 and new_node.add_child(self.s_prime()):
             print_log("FOUND: (S' ")
-        elif new_node.add_child(self.oper()) \
+        elif new_node.add_child(self.oper3()) \
                 and new_node.add_child(self.s()):
             print_log("FOUND: oper3 S")
-        elif new_node.add_child(self.oper()):
+        elif new_node.add_child(self.oper3()):
             print_log("FOUND oper3")
         else:
             self.parse_error("could not find grammar in s")
@@ -189,7 +192,7 @@ class MyParser(object):
 
     def s_prime(self):
         # S' --> ] | S] | Expr2] | ]S
-        new_node = Node("S")
+        new_node = Node("S'")
         save = globals()["current_token_index"]
         if new_node.add_child(self.is_value(self.get_token(), R_PAREN)):
             print_log("FOUND: )")
@@ -229,7 +232,7 @@ class MyParser(object):
         if not self.current_state:
             return None
         # expr2 --> Stmt | Oper2
-        new_node = Node("expr3")
+        new_node = Node("expr2")
         save = globals()["current_token_index"]
         if new_node.add_child(self.stmts()):
             print_log("FOUND: stmts")
@@ -255,7 +258,6 @@ class MyParser(object):
         elif new_node.add_child(self.oper3()):
             print_log("FOUND: oper3")
         else:
-            self.parse_error("missing oper constant or name")
             current_token_index = saved_token_index
             # new_node.print_tree()
             return None
@@ -283,7 +285,6 @@ class MyParser(object):
                 and new_node.add_child(self.oper()):
             print_log("FOUND: Unop Oper")
         else:
-            self.parse_error("missing oper2 constant or name")
             current_token_index = saved_token_index
             return None
         return new_node
@@ -300,7 +301,6 @@ class MyParser(object):
         elif new_node.add_child(self.name()):
             print_log("FOUND: name")
         else:
-            self.parse_error("missing left paren constant or name")
             current_token_index = saved_token_index
             return None
         return new_node

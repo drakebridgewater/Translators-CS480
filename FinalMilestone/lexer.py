@@ -18,7 +18,7 @@ class Lexer():
         self.tokens = \
             {"keywords": [KEYWORD_STDOUT, KEYWORD_LET, KEYWORD_IF, KEYWORD_WHILE,
                           KEYWORD_TRUE, KEYWORD_FALSE, OPER_ASSIGN],
-             "ops": [OPER_ASSIGN, OPER_ADD, OPER_SUB, OPER_DIV, OPER_MULT,
+             "ops": [OPER_ADD, OPER_SUB, OPER_DIV, OPER_MULT,
                      OPER_LT, OPER_GT, OPER_NOT, OPER_MOD, OPER_EXP,
                      OPER_AND, OPER_OR, OPER_NOT, OPER_NE, R_PAREN, L_PAREN],
              'type': [TYPE_BOOL, TYPE_INT, TYPE_REAL, TYPE_STRING]
