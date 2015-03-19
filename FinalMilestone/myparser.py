@@ -5,13 +5,13 @@ from defines import *
 
 class Node(object):
     def __init__(self, data):
-        print("-"*20)
-        if hasattr(data, 'line'):
-            print("New Node: ")
-            print_token(data)
-        else:
-            print("NN Str: ")
-            print(data)
+        # print("-"*20)
+        # if hasattr(data, 'line'):
+        #     print("New Node: ")
+        #     print_token(data)
+        # else:
+        #     print("NN Str: ")
+        #     print(data)
         self.data = data
         self.children = []
         self.depth = 0
@@ -166,8 +166,10 @@ class MyParser(object):
                 pass
             if new_node.add_child(self.is_value(self.get_token(), R_PAREN)):
                 pass
+            else:
+                print_error("unrecoverable error", error_type="parser")
         else:
-            self.parse_error("could not find grammar in T")
+            print_error("somethings screwy", error_type='parser')
             globals()["current_token_index"] = save
             return None
         return new_node
@@ -185,7 +187,6 @@ class MyParser(object):
         elif new_node.add_child(self.oper3()):
             print_log("FOUND oper3")
         else:
-            self.parse_error("could not find grammar in s")
             globals()["current_token_index"] = save
             return None
         return new_node
@@ -206,7 +207,6 @@ class MyParser(object):
                 and new_node.add_child(self.s()):
             print_log("FOUND: ) S")
         else:
-            self.parse_error("could not find grammar in s")
             globals()["current_token_index"] = save
             return None
         return new_node
@@ -340,7 +340,7 @@ class MyParser(object):
         elif new_node.add_child(self.is_value(self.get_token(), OPER_AND)):
             pass
         else:
-            self.parse_error("missing binop")
+            self.parse_error("missing binop or paren [b]")
             globals()["current_token_index"] = save
             return None
         return new_node
@@ -361,7 +361,7 @@ class MyParser(object):
             pass
         else:
             globals()["current_token_index"] = save
-            self.parse_error("missing unop")
+            self.parse_error("missing unop or paren [a]")
             return None
         return new_node
 
@@ -454,7 +454,6 @@ class MyParser(object):
         elif new_node.add_child(self.printstmts()):
             print_log("FOUND: printstmts")
         else:
-            self.parse_error("missing if, while, let or print statment")
             globals()["current_token_index"] = save
             return None
         return new_node
@@ -470,7 +469,6 @@ class MyParser(object):
             print_log("FOUND: stdout oper")
         else:
             globals()["current_token_index"] = save
-            self.parse_error("missing print statement paren")
             return None
         return new_node
 
@@ -486,7 +484,6 @@ class MyParser(object):
             print_log("FOUND: if expr if2")
         else:
             globals()["current_token_index"] = save
-            self.parse_error("not an if statment")
             return None
         return new_node
 
@@ -522,7 +519,6 @@ class MyParser(object):
                 return None
         else:
             globals()["current_token_index"] = save
-            self.parse_error("Not While stmts")
             return None
         return new_node
 
@@ -537,7 +533,6 @@ class MyParser(object):
                 pass
         else:
             globals()["current_token_index"] = save
-            self.parse_error("not expression list")
             return None
         return new_node
 
@@ -555,15 +550,12 @@ class MyParser(object):
                     pass
                 else:
                     globals()["current_token_index"] = save
-                    print_error("missing right paren in let statement", error_type="parser")
                     return None
             else:
                 globals()["current_token_index"] = save
-                print_error("missing opening paren after let statement")
                 return None
         else:
             globals()["current_token_index"] = save
-            self.parse_error("Checked if let statement")
             return None
         return new_node
 
@@ -584,13 +576,15 @@ class MyParser(object):
                     else:
                         globals()["current_token_index"] = save
                 else:
+                    print_error("let statement error within varlist considering type", error_type="parser")
                     globals()["current_token_index"] = save
                     return new_node
             elif new_node.add_child(self.varlist()):
                 return new_node
+            else:
+                print_error("let statement error within varlist considering variable", error_type="parser")
         else:
             globals()["current_token_index"] = save
-            self.parse_error("not varlist")
             return None
         return new_node
 

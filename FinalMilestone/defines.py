@@ -2,6 +2,7 @@ __author__ = 'Drake'
 
 files = []
 global OPTIONS
+# globals()["OPTIONS"] = []
 globals()["OPTIONS"] = ['lexer', 'print', 'postorder', 'tree', 'debug', 'parse']
 
 global DEBUG
@@ -49,6 +50,7 @@ TYPE_ID = 'ID'
 
 def print_error(msg, line='NA', error_type='general'):
     print(error_type.upper() + " ERROR: [line: " + str(line) + "] " + msg)
+    exit()
 
 
 def print_title(msg):

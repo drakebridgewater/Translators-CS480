@@ -10,6 +10,7 @@
     ( := x a )
     ( := width ( / ( - b ( + a x  ) ) n ) )
 
+
     ( while ( < x b )
       ( := area ( + area ( * ( ^ x 2 ) width ) ) )
       ( := x ( + x width ) )
