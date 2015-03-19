@@ -59,6 +59,9 @@ class Lexer():
             elif self.current_char == '\n':
                 self.get_next_char()
                 self.line += 1
+            elif self.current_char == '':
+                self.get_next_char()
+                self.line += 1
             elif self.current_char in self.accepted_ops:
                 return self.is_op()
             elif self.is_letter():

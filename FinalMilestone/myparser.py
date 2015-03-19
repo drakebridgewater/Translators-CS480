@@ -273,13 +273,16 @@ class MyParser(object):
 
         new_node = Node("oper2")
         saved_token_index = current_token_index
-        if new_node.add_child(self.is_value(self.get_token(), OPER_ASSIGN)) \
-                and new_node.add_child(self.is_type(self.get_token(), TYPE_ID)) \
-                and new_node.add_child(self.oper()):
-            print_log("FOUND: := Name Oper")
-        elif new_node.add_child(self.binops()) \
-                and new_node.add_child(self.oper()) \
-                and new_node.add_child(self.oper()):
+        if new_node.add_child(self.oper4()):
+            print_log("FOUND: := Name Oper4")
+        elif new_node.add_child(self.binops()):
+            if new_node.add_child(self.oper()):
+                if new_node.add_child(self.oper()):
+                    pass
+                else:
+                    print_error("missing second oper in binary op", error_type="parser")
+            else:
+                print_error("missing first oper in binary op", error_type="parser")
             print_log("FOUND: Binop Oper Oper")
         elif new_node.add_child(self.unops()) \
                 and new_node.add_child(self.oper()):
@@ -288,6 +291,25 @@ class MyParser(object):
             current_token_index = saved_token_index
             return None
         return new_node
+
+    def oper4(self):
+        # only for the assignment operator
+        global current_token_index
+        new_node = Node("oper4")
+        saved_token_index = current_token_index
+        if new_node.add_child(self.is_value(self.get_token(), OPER_ASSIGN)):
+            if new_node.add_child(self.is_type(self.get_token(), TYPE_ID)):
+                if new_node.add_child(self.oper()):
+                    pass
+                else:
+                    print_error("missing value for assignment", error_type='parser')
+            else:
+                print_error("missing variable for assignment", error_type='parser')
+        else:
+            current_token_index = saved_token_index
+            return None
+        return new_node
+
 
     def oper3(self):
         # Oper3 --> Constant | Name
